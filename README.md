@@ -16,3 +16,13 @@ brew bundle
 asdf plugin install deno
 asdf install
 ```
+
+## Scripts
+
+### Update deps
+
+To upgrade all dependencies:
+
+```shell
+deno task update-deps
+```

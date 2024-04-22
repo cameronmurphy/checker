@@ -1,7 +1,8 @@
 {
   "tasks": {
     "dev": "deno run --watch main.ts",
-    "run": "deno run main.ts"
+    "run": "deno run main.ts",
+    "update-deps": "deno run --allow-net --allow-read --allow-write ./scripts/udd.ts"
   },
   "fmt": {
     "lineWidth": 140,

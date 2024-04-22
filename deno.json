@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts",
+    "run": "deno run main.ts"
+  },
+  "fmt": {
+    "lineWidth": 140,
+    "singleQuote": true
+  }
+}

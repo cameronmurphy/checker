@@ -2,7 +2,7 @@
   "tasks": {
     "dev": "deno run --allow-env --allow-read --allow-net --watch main.ts",
     "run": "deno run --allow-env --allow-read --allow-net main.ts",
-    "update-deps": "deno run --allow-net --allow-read --allow-write --allow-run ./scripts/udd.ts"
+    "upgrade-deps": "deno run --allow-net --allow-read --allow-write --allow-run ./scripts/udd.ts"
   },
   "fmt": {
     "lineWidth": 140,

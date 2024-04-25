@@ -17,12 +17,44 @@ asdf plugin install deno
 asdf install
 ```
 
+## Configuration
+
+Copy the example config to the default location and customise as necessary.
+
+```shell
+mkdir -p ~/.config/checker
+cp config.example.yml ~/.config/checker/config.yml
+vim ~/.config/checker/config.yml # Set up at least one source and destination
+```
+
 ## Scripts
 
-### Update deps
+### Dev
+
+Run the app and automatically reload when the code changes.
+
+```shell
+deno task dev
+```
+
+### Run
+
+Run the app.
+
+```shell
+deno task run
+```
+
+Run the app against a different config file.
+
+```shell
+deno task run --config-file /usr/local/etc/checker/config.yml
+```
+
+### Upgrade deps
 
 To upgrade all dependencies:
 
 ```shell
-deno task update-deps
+deno task upgrade-deps
 ```

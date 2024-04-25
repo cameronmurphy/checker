@@ -1,0 +1,22 @@
+config:
+  source_plugin_dir: '~/.config/checker/sources' # Optional, defaults to ~/.config/checker/sources
+  destination_plugin_dir: '~/.config/checker/destinations' # Optional, defaults to ~/.config/checker/destinations
+  sources:
+    github:
+      interval: 3600 # Optional, default 60 minutes (3600 seconds)
+      items: # Notify me about new releases for these libraries (not every source requires items)
+        - 'facebook/react'
+        - 'vercel/next.js'
+      destinations: # Optional, by default notify all configured destinations
+        - 'pushover'
+  destinations:
+    pushover:
+      token: 'your-pushover-token'
+      user-key: 'your-user-key'
+      device: 'iphone' # Optional
+      rollup: 'none' # Optional, 'none'       = notify individually about every update.
+                     #           '9pm'        = roll up the day's updates into one message a day at 9pm.
+                     #           '9am 9pm'    = roll up updates into twice daily messages at 9am and 9pm.
+                     #           'sunday 9pm' = roll up the week's updates into one message on Sundays at 9pm.
+                     #           '31st 9pm'   = roll up the month's updates into one message on the 31st.
+                     #                          (or last day of the month) at 9pm.

@@ -1,5 +1,7 @@
 # Checker
 
+[![Lint and test](https://github.com/cameronmurphy/checker/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/cameronmurphy/checker/actions/workflows/lint-and-test.yml)
+
 Get notified when stuff changes.
 
 ## Dev setup (macOS)

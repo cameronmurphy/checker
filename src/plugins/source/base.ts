@@ -1,7 +1,7 @@
 abstract class BaseSourcePlugin {
   protected config: object;
 
-  constructor(config: object) {
+  protected constructor(config: object) {
     this.config = config;
   }
 

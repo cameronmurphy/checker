@@ -2,7 +2,8 @@ import { mock, mockFile } from '../dev_deps.ts';
 
 let stubs: mock.Stub[] = [];
 
-const mockConfig = `config:
+const mockConfig = `
+config:
   sources:
     github:
   destinations:

@@ -6,8 +6,11 @@ const mockConfig = `
 config:
   sources:
     github:
+      items:
+        - 'vercel/nextjs'
   destinations:
     pushover:
+      rollup: '9pm'
 `;
 
 export function setup() {

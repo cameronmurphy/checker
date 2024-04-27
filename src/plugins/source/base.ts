@@ -1,4 +1,12 @@
+import { zod as z } from '../../../deps.ts';
+
 abstract class BaseSourcePlugin {
+  public static ConfigSchema = z.object({
+    interval: z.number().default(3600),
+    items: z.array(z.string()),
+    destinations: z.array(z.string()).optional(),
+  });
+
   protected config: object;
 
   protected constructor(config: object) {
@@ -6,7 +14,7 @@ abstract class BaseSourcePlugin {
   }
 
   // Read the state of play for a given item
-  abstract async read(item: string): string;
+  abstract read(item?: string): Promise<string>;
 
   // Is b new/better enough to notify a subscriber about?
   abstract updated(a: string, b: string): boolean;

@@ -1,6 +1,15 @@
-// A source plugin is responsible for checking a source.
+import { validateRollupValue } from '../../utils/schema.ts';
+import { zod as z } from '../../../deps.ts';
+
 abstract class BaseDestinationPlugin {
-  async notify(message: string): boolean;
+  public static ConfigSchema = z.object({
+    rollup: z.string().refine(
+      (value: string) => validateRollupValue(value),
+      { message: 'Invalid rollup value' },
+    ).default('none'),
+  });
+
+  abstract notify(message: string): Promise<boolean>;
 }
 
 export default BaseDestinationPlugin;

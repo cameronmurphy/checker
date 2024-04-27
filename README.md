@@ -12,7 +12,8 @@ Install [Homebrew](https://brew.sh).
 brew bundle
 ```
 
-[Configure your shell](https://asdf-vm.com/guide/getting-started.html#_3-install-asdf) for asdf. Restart your terminal session.
+[Configure your shell](https://asdf-vm.com/guide/getting-started.html#_3-install-asdf) for asdf. Restart your terminal
+session.
 
 ```shell
 asdf plugin install deno

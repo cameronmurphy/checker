@@ -5,7 +5,7 @@
     "upgrade-deps": "deno run --allow-net --allow-read --allow-write --allow-run ./scripts/udd.ts"
   },
   "fmt": {
-    "lineWidth": 140,
+    "lineWidth": 120,
     "singleQuote": true
   }
 }

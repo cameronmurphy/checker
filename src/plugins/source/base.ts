@@ -1,15 +1,20 @@
+import BasePlugin from '../base.ts';
 import { zod as z } from '../../../deps.ts';
+import ConfigSchema from '../../config/schema.ts';
 
-abstract class BaseSourcePlugin {
+export type ConfigType = z.infer<typeof ConfigSchema>;
+
+export default abstract class BaseSourcePlugin extends BasePlugin {
   public static ConfigSchema = z.object({
     interval: z.number().default(3600),
     items: z.array(z.string()),
     destinations: z.array(z.string()).optional(),
   });
 
-  protected config: object;
+  protected config: ConfigType;
 
-  protected constructor(config: object) {
+  protected constructor(config: ConfigType) {
+    super();
     this.config = config;
   }
 
@@ -23,4 +28,4 @@ abstract class BaseSourcePlugin {
   abstract message(a: string, b: string): string;
 }
 
-export default BaseSourcePlugin;
+export { z as zod };

@@ -11,7 +11,7 @@ config:
   destinations:
     pushover:
       token: 'your-pushover-token'
-      user-key: 'your-user-key'
+      user_key: 'your-user-key'
       device: 'iphone' # Optional
       rollup: 'none' # Optional, 'none'       = (default) notify individually about every update.
                      #           '9pm'        = roll up the day's updates into one message a day at 9pm.

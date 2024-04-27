@@ -2,7 +2,23 @@ import BaseSourcePlugin from './base.ts';
 import { zod as z } from '../../../deps.ts';
 
 export class GithubSource extends BaseSourcePlugin {
-  public static ConfigSchema = BaseSourcePlugin.ConfigSchema.extend({
-    items: z.array(z.string()).nonempty('Github plugin requires at least one item'),
+  private static ConfigSchema = BaseSourcePlugin.BaseConfigSchema.extend({
+    items: z.array(z.string()).min(1, 'Github plugin requires at least one item'),
   });
+
+  public getSchema() {
+    return GithubSource.ConfigSchema;
+  }
+
+  public read(_item?: string) {
+    return new Promise<string>((resolve) => resolve(''));
+  }
+
+  public updated(_a: string, _b: string) {
+    return false;
+  }
+
+  public message(_a: string, _b: string) {
+    return '';
+  }
 }

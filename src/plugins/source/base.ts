@@ -8,6 +8,12 @@ export default abstract class BaseSourcePlugin extends BasePlugin {
     destinations: z.array(z.string()).optional(),
   });
 
+  protected config: object | null = null;
+
+  public setConfig(config: object): void {
+    this.config = config;
+  }
+
   public getSchema() {
     return BaseSourcePlugin.BaseConfigSchema;
   }

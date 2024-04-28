@@ -14,11 +14,11 @@ export class GithubSource extends BaseSourcePlugin {
     return new Promise<string>((resolve) => resolve(''));
   }
 
-  public updated(_a: string, _b: string) {
+  public updated(_before: string, _after: string) {
     return false;
   }
 
-  public message(_a: string, _b: string) {
+  public message(_before: string, _after: string) {
     return '';
   }
 }

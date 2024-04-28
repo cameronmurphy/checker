@@ -30,6 +30,40 @@ cp config.example.yml ~/.config/checker/config.yml
 vim ~/.config/checker/config.yml # Set up at least one source and destination
 ```
 
+## Writing a plugin
+
+### Sources
+
+Source plugins by default go in `~/.config/checker/plugins/source`. Here's an example of a plugin that checks whether
+Taylor is playing in Australia any time soon.
+
+```typescript
+import BaseSourcePlugin, {
+  zod as z,
+} from 'https://raw.githubusercontent.com/cameronmurphy/checker/main/src/plugins/source/base.ts';
+
+export default class TaylorSource extends BaseSourcePlugin {
+  private static ConfigSchema = BaseSourcePlugin.ConfigSchema.extend({
+    items: z.array(z.string()).nonempty('Please specify at least one city'),
+  });
+
+  public getSchema() {
+    return TaylorSource.ConfigSchema;
+  }
+
+  public async read(item?: string) {
+  }
+
+  public updated(_before: string, _after: string) {
+    return false;
+  }
+
+  public message(_before: string, _after: string) {
+    return '';
+  }
+}
+```
+
 ## Scripts
 
 ### Dev

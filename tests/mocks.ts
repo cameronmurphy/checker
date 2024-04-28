@@ -4,6 +4,7 @@ let stubs: mock.Stub[] = [];
 
 const mockConfig = `
 config:
+  source_plugin_dir: '/Users/cam/.config/checker/plugins/source'
   sources:
     github:
       items:
@@ -21,8 +22,8 @@ export function setup() {
 
   const encoder = new TextEncoder();
   mockFile.prepareVirtualFile('/usr/test/.config/checker/config.yml', encoder.encode(mockConfig));
-  mockFile.prepareVirtualFile('/usr/test/.config/checker/plugins/source', encoder.encode(mockConfig));
-  mockFile.prepareVirtualFile('/usr/test/.config/checker/plugins/destination', encoder.encode(mockConfig));
+  mockFile.prepareVirtualFile('/usr/test/.config/checker/plugins/source');
+  mockFile.prepareVirtualFile('/usr/test/.config/checker/plugins/destination');
 }
 
 export function tearDown() {

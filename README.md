@@ -34,34 +34,52 @@ vim ~/.config/checker/config.yml # Set up at least one source and destination
 
 ### Sources
 
-Source plugins by default go in `~/.config/checker/plugins/source`. Here's an example of a plugin that checks whether
-Taylor is playing in Australia any time soon.
+Source plugins by default go in `~/.config/checker/plugins/source`. Here's an example, `sheeran.ts`, which is a plugin
+that checks whether Ed Sheeran is playing in certain countries any time soon.
 
 ```typescript
 import BaseSourcePlugin, {
   zod as z,
 } from 'https://raw.githubusercontent.com/cameronmurphy/checker/main/src/plugins/source/base.ts';
+import StrlenComparator from 'https://raw.githubusercontent.com/cameronmurphy/checker/main/src/comparator/strlen.ts';
+import { DOMParser } from 'https://deno.land/x/deno_dom/deno-dom-wasm.ts';
 
-export default class TaylorSource extends BaseSourcePlugin {
-  private static ConfigSchema = BaseSourcePlugin.ConfigSchema.extend({
-    items: z.array(z.string()).nonempty('Please specify at least one city'),
+export default class SheeranSource extends BaseSourcePlugin {
+  private static ConfigSchema = BaseSourcePlugin.BaseConfigSchema.extend({
+    items: z.array(z.string()).nonempty('Sheeran plugin requires at least one country name'),
   });
 
   public getSchema() {
-    return TaylorSource.ConfigSchema;
+    return SheeranSource.ConfigSchema;
   }
 
   public async read(item?: string) {
+    const response = await fetch('https://www.edsheeran.com/#tour');
+    const text = await response.text();
+    const doc = new DOMParser().parseFromString(text, 'text/html');
+
+    const dates = Array.from(doc.querySelectorAll('.event_location')).filter((el) => el.textContent?.includes(item));
+    return dates.map((el) => el.parentElement.querySelector('.event_date').textContent?.trim()).join(', ');
   }
 
-  public updated(_before: string, _after: string) {
-    return false;
+  public updated(before: string, after: string) {
+    return new StrlenComparator().updated(before, after);
   }
 
-  public message(_before: string, _after: string) {
-    return '';
+  public message(_before: string, after: string, item?: string) {
+    return `Ed Sheeran is playing in ${item} on ${after}!`;
   }
 }
+```
+
+Then you would configure this plugin like so:
+
+```yaml
+config:
+  sources:
+    sheeran:
+      items:
+        - 'Australia'
 ```
 
 ## Scripts

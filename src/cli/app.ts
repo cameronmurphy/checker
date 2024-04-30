@@ -18,9 +18,7 @@ export default async function app({ configFile }: { configFile: string }) {
   const { config: finalConfig } = await secondPassParse(configFile, allSources, allDestinations);
   const { sources, destinations: _destinations } = configure(finalConfig, allSources, allDestinations);
 
-  console.error(sources);
-
-  // sources.map(async (source) => await source.read());
+  await Promise.all(sources.map((source) => source.read()));
 
   console.log('Checker WIP');
 }

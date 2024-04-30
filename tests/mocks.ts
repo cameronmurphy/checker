@@ -4,7 +4,6 @@ let stubs: mock.Stub[] = [];
 
 const mockConfig = `
 config:
-  source_plugin_dir: '/Users/cam/.config/checker/plugins/source'
   sources:
     github:
       items:

@@ -1,10 +1,10 @@
-import ConfigSchema, { buildSecondPassSchema, Config } from './schema.ts';
-import { parseYaml } from '../../deps.ts';
-import { expand } from '../utils/path.ts';
-import BaseSourcePlugin from '../plugins/source/base.ts';
 import BaseDestinationPlugin from '../plugins/destination/base.ts';
+import BaseSourcePlugin from '../plugins/source/base.ts';
+import ConfigSchema, { buildSecondPassSchema } from './schema.ts';
+import { expand } from '../utils/path.ts';
+import { parseYaml } from '../../deps.ts';
 
-export async function firstPassParse(configFilePath: string): Promise<Config> {
+export async function firstPassParse(configFilePath: string) {
   const decoder = new TextDecoder('utf-8');
 
   const path = expand(configFilePath);
@@ -19,7 +19,7 @@ export async function secondPassParse(
   configFilePath: string,
   sourcePlugins: BaseSourcePlugin[],
   destinationPlugins: BaseDestinationPlugin[],
-): Promise<object> {
+) {
   const decoder = new TextDecoder('utf-8');
 
   const path = expand(configFilePath);

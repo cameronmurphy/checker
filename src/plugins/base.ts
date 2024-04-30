@@ -1,4 +1,12 @@
 export default abstract class BasePlugin {
+  protected config: object | null = null;
+
+  public setConfig(config: object) {
+    this.config = config;
+
+    return this;
+  }
+
   public getName() {
     const className = this.constructor.name;
 

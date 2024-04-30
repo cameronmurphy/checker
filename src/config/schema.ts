@@ -1,7 +1,5 @@
 import BaseDestinationPlugin from '../plugins/destination/base.ts';
 import BaseSourcePlugin from '../plugins/source/base.ts';
-import destinationBuiltIns from '../plugins/destination/built-ins.ts';
-import sourceBuiltIns from '../plugins/source/built-ins.ts';
 import { DEFAULT_DESTINATION_PLUGIN_DIR, DEFAULT_SOURCE_PLUGIN_DIR } from '../constants.ts';
 import { zod as z } from '../../deps.ts';
 
@@ -15,12 +13,9 @@ const ConfigSchema = z.object({
 });
 
 export function buildSecondPassSchema(
-  sourcePlugins: BaseSourcePlugin[],
-  destinationPlugins: BaseDestinationPlugin[],
+  sources: BaseSourcePlugin[],
+  destinations: BaseDestinationPlugin[],
 ) {
-  const sources = [...sourceBuiltIns, ...sourcePlugins];
-  const destinations = [...destinationBuiltIns, ...destinationPlugins];
-
   const sourceSchemas = sources.reduce((acc, source) => ({
     ...acc,
     [source.getName()]: source.getSchema().optional(),

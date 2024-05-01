@@ -45,8 +45,8 @@ import StrlenComparator from 'https://raw.githubusercontent.com/cameronmurphy/ch
 import { DOMParser } from 'https://deno.land/x/deno_dom/deno-dom-wasm.ts';
 
 export default class SheeranSource extends BaseSourcePlugin {
-  private static ConfigSchema = BaseSourcePlugin.BaseConfigSchema.extend({
-    items: z.array(z.string()).nonempty('Sheeran plugin requires at least one country name'),
+  private static ConfigSchema = BaseSourcePlugin.ConfigSchema.extend({
+    items: z.array(z.string()).min(1, 'Sheeran plugin requires at least one country name'),
   });
 
   public getSchema() {

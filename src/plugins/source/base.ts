@@ -2,14 +2,14 @@ import BasePlugin from '../base.ts';
 import { zod as z } from '../../../deps.ts';
 
 export default abstract class BaseSourcePlugin extends BasePlugin {
-  public static BaseConfigSchema = z.object({
+  public static ConfigSchema = z.object({
     interval: z.number().default(3600),
     items: z.array(z.string()),
     destinations: z.array(z.string()).optional(),
   });
 
   public getSchema() {
-    return BaseSourcePlugin.BaseConfigSchema;
+    return BaseSourcePlugin.ConfigSchema;
   }
 
   // Read the state of play for a given item

@@ -7,8 +7,8 @@ const ConfigSchema = z.object({
   config: z.object({
     source_plugin_dir: z.string().default(DEFAULT_SOURCE_PLUGIN_DIR),
     destination_plugin_dir: z.string().default(DEFAULT_DESTINATION_PLUGIN_DIR),
-    sources: z.record(BaseSourcePlugin.BaseConfigSchema),
-    destinations: z.record(BaseDestinationPlugin.BaseConfigSchema),
+    sources: z.record(BaseSourcePlugin.ConfigSchema),
+    destinations: z.record(BaseDestinationPlugin.ConfigSchema),
   }),
 });
 

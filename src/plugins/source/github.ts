@@ -2,12 +2,12 @@ import BaseSourcePlugin from './base.ts';
 import { zod as z } from '../../../deps.ts';
 
 export class GithubSource extends BaseSourcePlugin {
-  private static ConfigSchema = BaseSourcePlugin.BaseConfigSchema.extend({
+  private schema = BaseSourcePlugin.ConfigSchema.extend({
     items: z.array(z.string()).min(1, 'Github plugin requires at least one item'),
   });
 
   public getSchema() {
-    return GithubSource.ConfigSchema;
+    return this.schema;
   }
 
   public read(_item?: string) {

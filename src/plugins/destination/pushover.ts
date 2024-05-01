@@ -2,14 +2,14 @@ import BaseDestinationPlugin from './base.ts';
 import { zod as z } from '../../../deps.ts';
 
 export default class PushoverDestination extends BaseDestinationPlugin {
-  private static ConfigSchema = BaseDestinationPlugin.ConfigSchema.extend({
+  private schema = BaseDestinationPlugin.ConfigSchema.extend({
     token: z.string(),
     user_key: z.string(),
     device: z.string().optional(),
   });
 
   public getSchema() {
-    return PushoverDestination.ConfigSchema;
+    return this.schema;
   }
 
   public notify(_message: string) {

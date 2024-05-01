@@ -45,21 +45,23 @@ import StrlenComparator from 'https://raw.githubusercontent.com/cameronmurphy/ch
 import { DOMParser } from 'https://deno.land/x/deno_dom/deno-dom-wasm.ts';
 
 export default class SheeranSource extends BaseSourcePlugin {
-  private static ConfigSchema = BaseSourcePlugin.ConfigSchema.extend({
+  private schema = BaseSourcePlugin.ConfigSchema.extend({
     items: z.array(z.string()).min(1, 'Sheeran plugin requires at least one country name'),
   });
 
   public getSchema() {
-    return SheeranSource.ConfigSchema;
+    return this.schema;
   }
 
-  public async read(item?: string) {
+  public async read(item: string) {
     const response = await fetch('https://www.edsheeran.com/#tour');
     const text = await response.text();
     const doc = new DOMParser().parseFromString(text, 'text/html');
 
-    const dates = Array.from(doc.querySelectorAll('.event_location')).filter((el) => el.textContent?.includes(item));
-    return dates.map((el) => el.parentElement.querySelector('.event_date').textContent?.trim()).join(', ');
+    const locations = Array.from(doc?.querySelectorAll('.event_location') || []);
+    const relevantLocations = locations.filter((el) => el.textContent?.includes(item));
+    const dates = relevantLocations.map((el) => el.parentElement?.querySelector('.event_dates')?.textContent?.trim());
+    return dates.filter(Boolean).join();
   }
 
   public updated(before: string, after: string) {

@@ -8,6 +8,12 @@ config:
         - 'tus/tusd'
         - 'gotenberg/gotenberg'
       destinations: [pushover] # Optional, by default notify all configured destinations
+    npm:
+      interval: 3600
+      tag: 'latest' # Optional, default 'latest'. The dist-tag tracked by items that don't specify one.
+      items:
+        - 'filepond@beta' # Per-item override, using npm's own package@tag syntax
+        - '@types/node' # Scoped packages work as-is
   destinations:
     pushover:
       token: 'your-pushover-token'

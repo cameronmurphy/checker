@@ -1,16 +1,17 @@
 import BasePlugin from '../base.ts';
-import { validateRollupValue } from '../../utils/schema.ts';
-import { zod as z } from '../../../deps.ts';
+import { z } from 'zod';
 
-export default abstract class BaseDestinationPlugin extends BasePlugin {
-  public static ConfigSchema = z.object({
-    rollup: z.string().refine(
-      (value: string) => validateRollupValue(value),
-      { message: 'Invalid rollup value' },
-    ).default('none'),
-  });
+export type DestinationConfigShape = Record<string, never>;
 
-  public getSchema() {
+export const DestinationConfigSchema: z.ZodObject<DestinationConfigShape> = z.object({});
+
+export type DestinationConfig = z.infer<typeof DestinationConfigSchema>;
+
+export default abstract class BaseDestinationPlugin<TConfig extends DestinationConfig = DestinationConfig>
+  extends BasePlugin<TConfig> {
+  public static ConfigSchema = DestinationConfigSchema;
+
+  public getSchema(): z.ZodObject<DestinationConfigShape> {
     return BaseDestinationPlugin.ConfigSchema;
   }
 

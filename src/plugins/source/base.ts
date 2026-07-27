@@ -1,25 +1,31 @@
 import BasePlugin from '../base.ts';
-import { zod as z } from '../../../deps.ts';
+import { z } from 'zod';
 
-export default abstract class BaseSourcePlugin extends BasePlugin {
-  public static ConfigSchema = z.object({
-    interval: z.number().default(3600),
-    items: z.array(z.string()),
-    destinations: z.array(z.string()).optional(),
-  });
+export type SourceConfigShape = {
+  interval: z.ZodDefault<z.ZodNumber>;
+  items: z.ZodArray<z.ZodString>;
+  destinations: z.ZodOptional<z.ZodArray<z.ZodString>>;
+};
 
-  public getSchema() {
+export const SourceConfigSchema: z.ZodObject<SourceConfigShape> = z.object({
+  interval: z.number().default(3600),
+  items: z.array(z.string()),
+  destinations: z.array(z.string()).optional(),
+});
+
+export type SourceConfig = z.infer<typeof SourceConfigSchema>;
+
+export default abstract class BaseSourcePlugin<TConfig extends SourceConfig = SourceConfig>
+  extends BasePlugin<TConfig> {
+  public static ConfigSchema = SourceConfigSchema;
+
+  public getSchema(): z.ZodObject<SourceConfigShape> {
     return BaseSourcePlugin.ConfigSchema;
   }
 
-  // Read the state of play for a given item
-  abstract read(item?: string): Promise<string>;
+  abstract read(item: string): Promise<string>;
 
-  // Is b new/better enough to notify a subscriber about?
-  abstract updated(a: string, b: string): boolean;
+  abstract updated(before: string, after: string): boolean;
 
-  // Given there's a change, from a to b, what should we tell the subscriber?
-  abstract message(a: string, b: string): string;
+  abstract message(before: string, after: string, item: string): string;
 }
-
-export { z as zod };

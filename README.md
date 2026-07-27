@@ -12,12 +12,12 @@ Install [Homebrew](https://brew.sh).
 brew bundle
 ```
 
-[Configure your shell](https://asdf-vm.com/guide/getting-started.html#_3-install-asdf) for asdf. Restart your terminal
-session.
+Ensure `mise activate` is [in your shell rc/profile](https://mise.jdx.dev/cli/activate.html). If it needed to be added,
+restart your terminal session.
 
 ```shell
-asdf plugin install deno
-asdf install
+mise trust
+mise install
 ```
 
 ## Configuration
@@ -38,41 +38,49 @@ Source plugins by default go in `~/.config/checker/plugins/source`. Here's an ex
 that checks whether Ed Sheeran is playing in certain countries any time soon.
 
 ```typescript
-import BaseSourcePlugin, {
-  zod as z,
-} from 'https://raw.githubusercontent.com/cameronmurphy/checker/main/src/plugins/source/base.ts';
-import StrlenComparator from 'https://raw.githubusercontent.com/cameronmurphy/checker/main/src/comparator/strlen.ts';
-import { DOMParser } from 'https://deno.land/x/deno_dom/deno-dom-wasm.ts';
+import BaseSourcePlugin, { SourceConfigSchema } from 'jsr:@camurphy/checker@0.0.1/plugins/source';
+import CaseInsensitiveComparator from 'jsr:@camurphy/checker@0.0.1/comparator/case-insensitive';
+import { z } from 'jsr:@zod/zod@^4.4.3';
+import { DOMParser } from 'jsr:@b-fuze/deno-dom@^0.1.56';
 
-export default class SheeranSource extends BaseSourcePlugin {
-  private schema = BaseSourcePlugin.ConfigSchema.extend({
-    items: z.array(z.string()).min(1, 'Sheeran plugin requires at least one country name'),
-  });
+const SheeranConfigSchema = SourceConfigSchema.extend({
+  items: z.array(z.string()).min(1, 'Sheeran plugin requires at least one country name'),
+});
 
-  public getSchema() {
-    return this.schema;
+type SheeranConfig = z.infer<typeof SheeranConfigSchema>;
+
+export default class SheeranSource extends BaseSourcePlugin<SheeranConfig> {
+  private readonly comparator = new CaseInsensitiveComparator();
+
+  public override getSchema() {
+    return SheeranConfigSchema;
   }
 
-  public async read(item: string) {
-    const response = await fetch('https://www.edsheeran.com/#tour');
+  public override async read(item: string) {
+    const response = await fetch('https://www.edsheeran.com/');
     const text = await response.text();
     const doc = new DOMParser().parseFromString(text, 'text/html');
 
     const locations = Array.from(doc?.querySelectorAll('.event_location') || []);
     const relevantLocations = locations.filter((el) => el.textContent?.includes(item));
-    const dates = relevantLocations.map((el) => el.parentElement?.querySelector('.event_dates')?.textContent?.trim());
-    return dates.filter(Boolean).join();
+    const dates = relevantLocations.map((el) =>
+      el.parentElement?.querySelector('.event_date')?.textContent?.replace(/\s+/g, ' ').trim()
+    );
+    return dates.filter(Boolean).join(', ');
   }
 
-  public updated(before: string, after: string) {
-    return new StrlenComparator().updated(before, after);
+  public override updated(before: string, after: string) {
+    return this.comparator.updated(before, after);
   }
 
-  public message(_before: string, after: string, item?: string) {
+  public override message(_before: string, after: string, item: string) {
     return `Ed Sheeran is playing in ${item} on ${after}!`;
   }
 }
 ```
+
+The class name determines the config key: `SheeranSource` has its `Source` suffix stripped and the rest snake-cased,
+giving `sheeran`.
 
 Then you would configure this plugin like so:
 
@@ -110,8 +118,45 @@ deno task run --config-file /usr/local/etc/checker/config.yml
 
 ### Upgrade deps
 
-To upgrade all dependencies:
+To check for outdated dependencies:
 
 ```shell
-deno task upgrade-deps
+deno outdated
+```
+
+To update:
+
+```shell
+deno outdated --update
+```
+
+## Running as a service (macOS)
+
+Checker polls on its own schedule, so it wants to stay resident rather than be re-launched on a timer.
+
+Install the launch agent, substituting your home directory and this checkout for the placeholders. Run it from the
+repository root so `$PWD` resolves correctly.
+
+```shell
+mkdir -p ~/Library/LaunchAgents
+sed -e "s|__HOME__|$HOME|g" -e "s|__CHECKER__|$PWD|g" contrib/launchd/com.camurphy.checker.plist \
+  > ~/Library/LaunchAgents/com.camurphy.checker.plist
+
+launchctl load ~/Library/LaunchAgents/com.camurphy.checker.plist
+```
+
+The agent invokes deno through its mise shim rather than a bare `deno`, so it does not depend on `mise activate` having
+run — it will not have, in launchd's very minimal environment.
+
+Check that it came up, and watch the log:
+
+```shell
+launchctl list | grep checker
+tail -f ~/Library/Logs/checker.log
+```
+
+To stop it, or to reload after pulling new code:
+
+```shell
+launchctl unload ~/Library/LaunchAgents/com.camurphy.checker.plist
 ```

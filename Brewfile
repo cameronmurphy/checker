@@ -1,1 +1,1 @@
-brew 'asdf'
+brew 'mise'

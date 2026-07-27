@@ -1,18 +1,38 @@
-import BaseDestinationPlugin from './base.ts';
-import { zod as z } from '../../../deps.ts';
+import BaseDestinationPlugin, { DestinationConfigSchema } from './base.ts';
+import { z } from 'zod';
 
-export default class PushoverDestination extends BaseDestinationPlugin {
-  private schema = BaseDestinationPlugin.ConfigSchema.extend({
-    token: z.string(),
-    user_key: z.string(),
-    device: z.string().optional(),
-  });
+const PushoverConfigSchema = DestinationConfigSchema.extend({
+  token: z.string(),
+  user_key: z.string(),
+  device: z.string().optional(),
+});
 
-  public getSchema() {
-    return this.schema;
+type PushoverConfig = z.infer<typeof PushoverConfigSchema>;
+
+export default class PushoverDestination extends BaseDestinationPlugin<PushoverConfig> {
+  public override getSchema() {
+    return PushoverConfigSchema;
   }
 
-  public notify(_message: string) {
-    return new Promise<boolean>((resolve) => resolve(true));
+  public override async notify(message: string): Promise<boolean> {
+    const config = this.getConfig();
+
+    const response = await fetch('https://api.pushover.net/1/messages.json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: config.token,
+        user: config.user_key,
+        message,
+        ...(config.device ? { device: config.device } : {}),
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Pushover notification failed: ${response.statusText}`);
+      return false;
+    }
+
+    return true;
   }
 }

@@ -1,15 +1,18 @@
 import { expand } from '../utils/path.ts';
-import { fsExistsSync, fsWalk } from '../../deps.ts';
+import { walk } from '@std/fs/walk';
 
 export async function load<T>(path: string): Promise<T[]> {
   const plugins: T[] = [];
   const absolutePath = expand(path);
 
-  if (!fsExistsSync(absolutePath) || !Deno.statSync(absolutePath).isDirectory) {
+  try {
+    const stat = await Deno.stat(absolutePath);
+    if (!stat.isDirectory) return plugins;
+  } catch {
     return plugins;
   }
 
-  for await (const entry of fsWalk(absolutePath, { exts: ['.ts'] })) {
+  for await (const entry of walk(absolutePath, { exts: ['.ts'] })) {
     const { default: PluginClass } = await import(entry.path);
 
     if (PluginClass) {

@@ -1,5 +1,5 @@
 import app from './app.ts';
-import { Command } from '../../deps.ts';
+import { Command } from '@cliffy/command';
 import { DEFAULT_CONFIG_FILE_PATH } from '../constants.ts';
 
 export default function run() {

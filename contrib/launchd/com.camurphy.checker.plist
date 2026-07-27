@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.camurphy.checker</string>
+    <!--
+      Replace __HOME__ with your home directory and __CHECKER__ with your checkout; launchd expands neither.
+
+      Plugins resolve their own imports at runtime, so this runs from source rather than a compiled binary.
+      Invoking deno through its mise shim (rather than a bare 'deno') means this does not depend on
+      'mise activate' having run, which it will not have in launchd's very minimal environment.
+    -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>__HOME__/.local/share/mise/shims/deno</string>
+        <string>run</string>
+        <string>--allow-env</string>
+        <string>--allow-read</string>
+        <string>--allow-net</string>
+        <string>--allow-write</string>
+        <string>--allow-ffi</string>
+        <string>__CHECKER__/main.ts</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <!-- Prevent hammering various endpoints if the process is crash-looping. -->
+    <key>ThrottleInterval</key>
+    <integer>60</integer>
+    <key>StandardOutPath</key>
+    <string>__HOME__/Library/Logs/checker.log</string>
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Library/Logs/checker.log</string>
+</dict>
+</plist>

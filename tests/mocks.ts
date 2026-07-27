@@ -1,4 +1,4 @@
-import { mock, mockFile } from '../dev_deps.ts';
+import * as mock from '@std/testing/mock';
 
 let stubs: mock.Stub[] = [];
 
@@ -7,22 +7,26 @@ config:
   sources:
     github:
       items:
-        - 'vercel/nextjs'
+        - 'vercel/next.js'
   destinations:
     pushover:
       token: 'abcd1234'
       user_key: 'efgh5678'
-      rollup: '9pm'
 `;
 
 export function setup() {
   stubs.push(mock.stub(Deno.env, 'get', (variable: string) => variable === 'HOME' ? '/usr/test' : undefined));
-  stubs.push(mock.stub(Deno, 'cwd', () => '/usr/test'));
 
   const encoder = new TextEncoder();
-  mockFile.prepareVirtualFile('/usr/test/.config/checker/config.yml', encoder.encode(mockConfig));
-  mockFile.prepareVirtualFile('/usr/test/.config/checker/plugins/source');
-  mockFile.prepareVirtualFile('/usr/test/.config/checker/plugins/destination');
+  const configData = new Uint8Array(encoder.encode(mockConfig));
+
+  stubs.push(mock.stub(Deno, 'readFile', () => Promise.resolve(configData)));
+
+  // The state module ensures its parent directory exists; keep that off the real filesystem.
+  stubs.push(mock.stub(Deno, 'mkdir', () => Promise.resolve()));
+
+  const originalOpenKv = Deno.openKv.bind(Deno);
+  stubs.push(mock.stub(Deno, 'openKv', (_path?: string) => originalOpenKv(':memory:')));
 }
 
 export function tearDown() {

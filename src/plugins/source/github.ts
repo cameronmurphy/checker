@@ -1,24 +1,44 @@
-import BaseSourcePlugin from './base.ts';
-import { zod as z } from '../../../deps.ts';
+import BaseSourcePlugin, { SourceConfigSchema } from './base.ts';
+import SemverComparator from '../../comparator/semver.ts';
+import { z } from 'zod';
 
-export class GithubSource extends BaseSourcePlugin {
-  private schema = BaseSourcePlugin.ConfigSchema.extend({
-    items: z.array(z.string()).min(1, 'Github plugin requires at least one item'),
-  });
+const GithubConfigSchema = SourceConfigSchema.extend({
+  items: z.array(z.string()).min(1, 'Github plugin requires at least one item'),
+});
 
-  public getSchema() {
-    return this.schema;
+type GithubConfig = z.infer<typeof GithubConfigSchema>;
+
+export class GithubSource extends BaseSourcePlugin<GithubConfig> {
+  private readonly comparator = new SemverComparator();
+
+  public override getSchema() {
+    return GithubConfigSchema;
   }
 
-  public read(_item?: string) {
-    return new Promise<string>((resolve) => resolve(''));
+  public override async read(item: string): Promise<string> {
+    const response = await fetch(`https://api.github.com/repos/${item}/releases/latest`, {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`Failed to fetch latest release for ${item}: ${response.statusText}`);
+      return '';
+    }
+
+    const release = await response.json();
+    return release.tag_name ?? '';
   }
 
-  public updated(_before: string, _after: string) {
-    return false;
+  public override updated(before: string, after: string): boolean {
+    return this.comparator.updated(before, after);
   }
 
-  public message(_before: string, _after: string) {
-    return '';
+  public override message(before: string, after: string, item: string): string {
+    if (!before) {
+      return `${item}: first seen release is ${after}`;
+    }
+    return `${item}: new release ${after} (was ${before})`;
   }
 }

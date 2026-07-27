@@ -1,14 +1,14 @@
 import BaseDestinationPlugin from '../plugins/destination/base.ts';
 import BaseSourcePlugin from '../plugins/source/base.ts';
 import { DEFAULT_DESTINATION_PLUGIN_DIR, DEFAULT_SOURCE_PLUGIN_DIR } from '../constants.ts';
-import { zod as z } from '../../deps.ts';
+import { z } from 'zod';
 
 const ConfigSchema = z.object({
   config: z.object({
     source_plugin_dir: z.string().default(DEFAULT_SOURCE_PLUGIN_DIR),
     destination_plugin_dir: z.string().default(DEFAULT_DESTINATION_PLUGIN_DIR),
-    sources: z.record(BaseSourcePlugin.ConfigSchema),
-    destinations: z.record(BaseDestinationPlugin.ConfigSchema),
+    sources: z.record(z.string(), BaseSourcePlugin.ConfigSchema),
+    destinations: z.record(z.string(), BaseDestinationPlugin.ConfigSchema),
   }),
 });
 

@@ -1,8 +1,8 @@
-import BaseDestinationPlugin from '../plugins/destination/base.ts';
-import BaseSourcePlugin from '../plugins/source/base.ts';
+import type BaseDestinationPlugin from '../plugins/destination/base.ts';
+import type BaseSourcePlugin from '../plugins/source/base.ts';
 import ConfigSchema, { buildSecondPassSchema } from './schema.ts';
 import { expand } from '../utils/path.ts';
-import { parseYaml } from '../../deps.ts';
+import { parse as parseYaml } from '@std/yaml';
 
 export async function firstPassParse(configFilePath: string) {
   const decoder = new TextDecoder('utf-8');

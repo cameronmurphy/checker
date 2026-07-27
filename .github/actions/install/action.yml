@@ -3,4 +3,7 @@ runs:
 
   steps:
     - name: Setup Deno
-      uses: denoland/setup-deno@v1
+      uses: denoland/setup-deno@v2
+      with:
+        deno-version-file: .tool-versions
+        cache: true

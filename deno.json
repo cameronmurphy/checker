@@ -1,8 +1,35 @@
 {
+  "name": "@camurphy/checker",
+  "version": "0.0.1",
+  "license": "MIT",
+  "exports": {
+    "./plugins/source": "./src/plugins/source/base.ts",
+    "./plugins/destination": "./src/plugins/destination/base.ts",
+    "./comparator": "./src/comparator/base.ts",
+    "./comparator/case-insensitive": "./src/comparator/case-insensitive.ts",
+    "./comparator/int": "./src/comparator/int.ts",
+    "./comparator/semver": "./src/comparator/semver.ts",
+    "./comparator/strlen": "./src/comparator/strlen.ts"
+  },
+  "unstable": ["kv"],
+  "exclude": [".claude"],
+  "publish": {
+    "exclude": ["tests", "contrib", ".github", "config.example.yml"]
+  },
   "tasks": {
-    "dev": "deno run --allow-env --allow-read --allow-net --watch main.ts",
-    "run": "deno run --allow-env --allow-read --allow-net main.ts",
-    "upgrade-deps": "deno run --allow-net --allow-read --allow-write --allow-run ./scripts/udd.ts"
+    "dev": "deno run --allow-env --allow-read --allow-net --allow-write --allow-ffi --watch main.ts",
+    "run": "deno run --allow-env --allow-read --allow-net --allow-write --allow-ffi main.ts",
+    "test": "deno test --allow-env --allow-read --allow-net --allow-write"
+  },
+  "imports": {
+    "@std/path": "jsr:@std/path@^1.1.6",
+    "@std/semver": "jsr:@std/semver@^1.0.8",
+    "@std/yaml": "jsr:@std/yaml@^1.1.2",
+    "@std/fs": "jsr:@std/fs@^1.0.24",
+    "@std/assert": "jsr:@std/assert@^1.0.19",
+    "@std/testing": "jsr:@std/testing@^1.0.19",
+    "zod": "jsr:@zod/zod@^4.4.3",
+    "@cliffy/command": "jsr:@cliffy/command@^1.2.1"
   },
   "fmt": {
     "lineWidth": 120,

@@ -1,13 +1,13 @@
-import BaseSourcePlugin from './source/base.ts';
-import BaseDestinationPlugin from './destination/base.ts';
-import FinalConfigType from '../types/final-config.type.ts';
-import BasePlugin from './base.ts';
+import type BaseSourcePlugin from './source/base.ts';
+import type BaseDestinationPlugin from './destination/base.ts';
+import type FinalConfigType from '../types/final-config.type.ts';
+import type BasePlugin from './base.ts';
 
 const applyConfig = (pluginName: string, config: object, plugins: BasePlugin[]) => {
-  const plugin = plugins.find((plugin) => pluginName === plugin.getName());
+  const plugin = plugins.find((p) => pluginName === p.getName());
 
   if (!plugin) {
-    throw new Error(`Unknown plugin ${plugin} in config`);
+    throw new Error(`Unknown plugin "${pluginName}" in config`);
   }
 
   return plugin.setConfig(config);

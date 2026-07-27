@@ -22,6 +22,8 @@
         <string>--allow-ffi</string>
         <string>__CHECKER__/main.ts</string>
     </array>
+    <key>WorkingDirectory</key>
+    <string>__CHECKER__</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>

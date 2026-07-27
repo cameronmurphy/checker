@@ -38,8 +38,8 @@ Source plugins by default go in `~/.config/checker/plugins/source`. Here's an ex
 that checks whether Ed Sheeran is playing in certain countries any time soon.
 
 ```typescript
-import BaseSourcePlugin, { SourceConfigSchema } from 'jsr:@camurphy/checker@0.0.1/plugins/source';
-import CaseInsensitiveComparator from 'jsr:@camurphy/checker@0.0.1/comparator/case-insensitive';
+import BaseSourcePlugin, { SourceConfigSchema } from 'jsr:@camurphy/checker@0.0.2/plugins/source';
+import CaseInsensitiveComparator from 'jsr:@camurphy/checker@0.0.2/comparator/case-insensitive';
 import { z } from 'jsr:@zod/zod@^4.4.3';
 import { DOMParser } from 'jsr:@b-fuze/deno-dom@^0.1.56';
 

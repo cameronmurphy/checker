@@ -56,7 +56,7 @@ async function checkSource(
   destinations: BaseDestinationPlugin[],
 ) {
   const pluginName = source.getName();
-  const items: string[] = source.getConfig().items ?? [];
+  const items: string[] = source.getConfig().items ?? [''];
 
   for (const item of items) {
     try {

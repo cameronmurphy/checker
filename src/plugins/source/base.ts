@@ -3,13 +3,13 @@ import { z } from 'zod';
 
 export type SourceConfigShape = {
   interval: z.ZodDefault<z.ZodNumber>;
-  items: z.ZodArray<z.ZodString>;
+  items: z.ZodOptional<z.ZodArray<z.ZodString>>;
   destinations: z.ZodOptional<z.ZodArray<z.ZodString>>;
 };
 
 export const SourceConfigSchema: z.ZodObject<SourceConfigShape> = z.object({
   interval: z.number().default(3600),
-  items: z.array(z.string()),
+  items: z.array(z.string()).optional(),
   destinations: z.array(z.string()).optional(),
 });
 
@@ -19,7 +19,7 @@ export default abstract class BaseSourcePlugin<TConfig extends SourceConfig = So
   extends BasePlugin<TConfig> {
   public static ConfigSchema = SourceConfigSchema;
 
-  public getSchema(): z.ZodObject<SourceConfigShape> {
+  public getSchema(): z.ZodObject<z.ZodRawShape> {
     return BaseSourcePlugin.ConfigSchema;
   }
 

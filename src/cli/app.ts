@@ -6,6 +6,10 @@ import { load } from '../plugins/load.ts';
 import { closeState, getItemState, setItemState } from '../db/state.ts';
 import builtInSources from '../plugins/source/built-ins.ts';
 import builtInDestinations from '../plugins/destination/built-ins.ts';
+import { expand } from '../utils/path.ts';
+import { basename, dirname } from '@std/path';
+
+const RELOAD_DEBOUNCE_MS = 500;
 
 function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -67,7 +71,7 @@ async function checkSource(
   }
 }
 
-export default async function app({ configFile }: { configFile: string }) {
+async function loadConfiguredPlugins(configFile: string) {
   const { config } = await firstPassParse(configFile);
 
   const allSources = [...builtInSources, ...await load<BaseSourcePlugin>(config.source_plugin_dir)];
@@ -77,25 +81,86 @@ export default async function app({ configFile }: { configFile: string }) {
   ];
 
   const { config: finalConfig } = await secondPassParse(configFile, allSources, allDestinations);
-  const { sources, destinations } = configure(finalConfig, allSources, allDestinations);
 
-  console.log(`Checker started — monitoring ${sources.length} source(s)`);
+  return configure(finalConfig, allSources, allDestinations);
+}
 
-  for (const source of sources) {
-    await checkSource(source, destinations);
+// Watching the directory rather than the config file itself survives the write-to-temp-then-rename
+// that editors save with, which swaps out the inode a file watch was holding.
+function watchConfigFile(configFile: string, reload: () => void): Deno.FsWatcher | null {
+  const path = expand(configFile);
+  let watcher: Deno.FsWatcher;
+
+  try {
+    watcher = Deno.watchFs(dirname(path), { recursive: false });
+  } catch (error) {
+    console.error(`Not watching ${path} for changes: ${describeError(error)}`);
+    return null;
   }
 
-  for (const source of sources) {
-    const interval = (source.getConfig().interval ?? 3600) * 1000;
-    setInterval(() => {
-      checkSource(source, destinations).catch((error) => {
-        console.error(`Scheduled check failed: ${describeError(error)}`);
+  (async () => {
+    let pending: ReturnType<typeof setTimeout> | undefined;
+
+    for await (const event of watcher) {
+      if (event.kind === 'access') continue;
+      if (!event.paths.some((eventPath) => basename(eventPath) === basename(path))) continue;
+
+      clearTimeout(pending);
+      pending = setTimeout(reload, RELOAD_DEBOUNCE_MS);
+    }
+  })().catch((error) => console.error(`Stopped watching ${path}: ${describeError(error)}`));
+
+  return watcher;
+}
+
+export default async function app({ configFile }: { configFile: string }) {
+  let timers: ReturnType<typeof setInterval>[] = [];
+  let fingerprints = new Map<string, string>();
+
+  const apply = async (reason: string) => {
+    const { sources, destinations } = await loadConfiguredPlugins(configFile);
+
+    const previous = fingerprints;
+    fingerprints = new Map(sources.map((source) => [source.getName(), JSON.stringify(source.getConfig())]));
+
+    // Only sources whose config actually moved get an immediate check, so saving the file repeatedly
+    // doesn't hammer every remote the config mentions.
+    const changed = sources.filter((source) => previous.get(source.getName()) !== fingerprints.get(source.getName()));
+
+    timers.forEach(clearInterval);
+    timers = sources.map((source) =>
+      setInterval(() => {
+        checkSource(source, destinations).catch((error) => {
+          console.error(`Scheduled check failed: ${describeError(error)}`);
+        });
+      }, (source.getConfig().interval ?? 3600) * 1000)
+    );
+
+    console.log(
+      `${reason} — monitoring ${sources.length} source(s)${changed.length ? `, checking ${changed.length} now` : ''}`,
+    );
+
+    for (const source of changed) {
+      await checkSource(source, destinations);
+    }
+  };
+
+  // Reloads queue behind whatever check is already running, so saving the config mid-sweep can't have
+  // two passes racing to report the same item for the first time.
+  let queued = apply('Checker started');
+  await queued;
+
+  const watcher = watchConfigFile(configFile, () => {
+    queued = queued
+      .then(() => apply('Config reloaded'))
+      .catch((error) => {
+        console.error(`Config reload failed, keeping the previous config: ${describeError(error)}`);
       });
-    }, interval);
-  }
+  });
 
   const shutdown = () => {
     console.log('\nShutting down...');
+    watcher?.close();
     closeState();
     Deno.exit(0);
   };

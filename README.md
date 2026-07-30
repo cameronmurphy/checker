@@ -38,10 +38,10 @@ Source plugins by default go in `~/.config/checker/plugins/source`. Here's an ex
 that checks whether Ed Sheeran is playing in certain countries any time soon.
 
 ```typescript
-import BaseSourcePlugin, { SourceConfigSchema } from 'jsr:@camurphy/checker@0.0.2/plugins/source';
-import CaseInsensitiveComparator from 'jsr:@camurphy/checker@0.0.2/comparator/case-insensitive';
-import { z } from 'jsr:@zod/zod@^4.4.3';
-import { DOMParser } from 'jsr:@b-fuze/deno-dom@^0.1.56';
+import BaseSourcePlugin, { SourceConfigSchema } from 'checker/plugins/source';
+import CaseInsensitiveComparator from 'checker/comparator/case-insensitive';
+import { DOMParser } from 'checker/parse';
+import { z } from 'zod';
 
 const SheeranConfigSchema = SourceConfigSchema.extend({
   items: z.array(z.string()).min(1, 'Sheeran plugin requires at least one country name'),
@@ -91,6 +91,30 @@ config:
       items:
         - 'Australia'
 ```
+
+### Imports available to plugins
+
+Plugins are loaded at runtime, which means they can only import what checker was built with — a distributed binary has
+no module cache to fetch from and no network access at load time. Import from these specifiers rather than `jsr:` URLs,
+and everything resolves offline:
+
+| Specifier                             | What you get                                                                                  |
+| ------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `checker/plugins/source`              | `BaseSourcePlugin` (default), `SourceConfigSchema`                                            |
+| `checker/plugins/destination`         | `BaseDestinationPlugin` (default), `DestinationConfigSchema`                                  |
+| `checker/comparator`                  | `BaseComparator`, to write your own                                                           |
+| `checker/comparator/case-insensitive` | `CaseInsensitiveComparator` — any change in text, ignoring case                               |
+| `checker/comparator/int`              | `IntComparator` — a bigger number than last time                                              |
+| `checker/comparator/semver`           | `SemverComparator` — a higher version, falling back to inequality for tags that aren't semver |
+| `checker/comparator/strlen`           | `StrlenComparator` — the text got longer                                                      |
+| `checker/parse`                       | `DOMParser`, `parseXml`, `parseYaml`, `parseToml`, `parseCsv`, `parseJsonc`, `unescapeHtml`   |
+| `zod`                                 | `z`, for the config schema                                                                    |
+
+Importing anything else fails with `Module not found`; checker logs that and carries on without the plugin, so one bad
+plugin can't stop the rest from running.
+
+Adding a plugin file only needs a config save to pick it up, but _editing_ one needs a restart — the runtime caches
+modules it has already loaded.
 
 ## Scripts
 
@@ -154,6 +178,10 @@ Check that it came up, and watch the log:
 launchctl list | grep checker
 tail -f ~/Library/Logs/checker.log
 ```
+
+Config changes don't need a restart. Checker watches the config file and re-reads it on save, so adding a source or an
+item takes effect within a second; sources whose config didn't change keep their existing schedule and aren't
+re-checked. A config that fails to parse is logged and ignored, leaving the running config in place.
 
 To stop it, or to reload after pulling new code:
 

@@ -14,6 +14,15 @@ config:
       items:
         - 'filepond@beta' # Per-item override, using npm's own package@tag syntax
         - '@types/node' # Scoped packages work as-is
+    docker:
+      interval: 3600
+      prereleases: false # Optional, default false. Whether tags like '1.2.3-rc1' or '1.2.3-alpine' count as releases.
+      # username: 'user' # Optional, for private repositories
+      # password: 'token'
+      items:
+        - 'nginx' # Untagged: notify on the highest new semver tag, i.e. a new release
+        - 'grafana/grafana:latest' # Tagged: notify when that tag's digest changes, i.e. a rebuild
+        - 'ghcr.io/home-assistant/home-assistant' # Any OCI registry, not just Docker Hub
   destinations:
     pushover:
       token: 'your-pushover-token'

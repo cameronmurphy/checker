@@ -9,7 +9,8 @@
     "./comparator/case-insensitive": "./src/comparator/case-insensitive.ts",
     "./comparator/int": "./src/comparator/int.ts",
     "./comparator/semver": "./src/comparator/semver.ts",
-    "./comparator/strlen": "./src/comparator/strlen.ts"
+    "./comparator/strlen": "./src/comparator/strlen.ts",
+    "./parse": "./src/parse.ts"
   },
   "unstable": ["kv"],
   "exclude": [".claude"],
@@ -19,11 +20,26 @@
   "tasks": {
     "dev": "deno run --allow-env --allow-read --allow-net --allow-write --allow-ffi --watch main.ts",
     "run": "deno run --allow-env --allow-read --allow-net --allow-write --allow-ffi main.ts",
-    "test": "deno test --allow-env --allow-read --allow-net --allow-write"
+    "test": "deno test --allow-env --allow-read --allow-net --allow-write",
+    "compile": "deno compile --allow-env --allow-read --allow-net --allow-write --allow-ffi --include ./src --output dist/checker main.ts"
   },
   "imports": {
+    "checker/plugins/source": "./src/plugins/source/base.ts",
+    "checker/plugins/destination": "./src/plugins/destination/base.ts",
+    "checker/comparator": "./src/comparator/base.ts",
+    "checker/comparator/case-insensitive": "./src/comparator/case-insensitive.ts",
+    "checker/comparator/int": "./src/comparator/int.ts",
+    "checker/comparator/semver": "./src/comparator/semver.ts",
+    "checker/comparator/strlen": "./src/comparator/strlen.ts",
+    "checker/parse": "./src/parse.ts",
+    "@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom@^0.1.56",
+    "@libs/xml": "jsr:@libs/xml@^8.0.0",
+    "@std/csv": "jsr:@std/csv@^1.0.6",
+    "@std/html": "jsr:@std/html@^1.0.7",
+    "@std/jsonc": "jsr:@std/jsonc@^1.0.2",
     "@std/path": "jsr:@std/path@^1.1.6",
     "@std/semver": "jsr:@std/semver@^1.0.8",
+    "@std/toml": "jsr:@std/toml@^1.0.11",
     "@std/yaml": "jsr:@std/yaml@^1.1.2",
     "@std/fs": "jsr:@std/fs@^1.0.24",
     "@std/assert": "jsr:@std/assert@^1.0.19",

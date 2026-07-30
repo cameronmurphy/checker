@@ -1,3 +1,4 @@
 Brewfile.lock.json
 build/
+dist/
 .claude/worktrees/

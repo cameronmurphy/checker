@@ -1,0 +1,40 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Lint and test]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  build:
+    if: ${{ github.event.workflow_run && github.event.workflow_run.conclusion == 'success' || !github.event.workflow_run }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target:
+          - aarch64-apple-darwin
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install
+        uses: ./.github/actions/install
+
+      # --include bundles everything plugins can import; without it a plugin importing, say,
+      # checker/comparator/strlen fails to load in the compiled binary.
+      - name: Build
+        run: |
+          deno compile --allow-env --allow-read --allow-net --allow-write --allow-ffi --include ./src \
+            --target ${{ matrix.target }} --output dist/checker-${{ matrix.target }} main.ts
+
+      - name: Upload compiled app
+        uses: actions/upload-artifact@v4
+        with:
+          name: checker-${{ matrix.target }}
+          path: dist/checker-${{ matrix.target }}

@@ -158,33 +158,32 @@ deno outdated --update
 
 Checker polls on its own schedule, so it wants to stay resident rather than be re-launched on a timer.
 
-Install the launch agent, substituting your home directory and this checkout for the placeholders. Run it from the
-repository root so `$PWD` resolves correctly.
+The service runs the compiled binary. Every release ships one per target; grab the one matching your machine —
+`checker-aarch64-apple-darwin` for Apple Silicon, `checker-x86_64-unknown-linux-gnu` or
+`checker-aarch64-unknown-linux-gnu` for Linux.
+
+```shell
+mkdir -p ~/.local/bin
+curl -fsSL -o ~/.local/bin/checker https://github.com/cameronmurphy/checker/releases/latest/download/checker-aarch64-apple-darwin
+chmod +x ~/.local/bin/checker
+```
+
+Install the launch agent, substituting your home directory for the placeholder. Run it from the repository root so the
+template path resolves.
 
 ```shell
 mkdir -p ~/Library/LaunchAgents
-sed -e "s|__HOME__|$HOME|g" -e "s|__CHECKER__|$PWD|g" contrib/launchd/com.camurphy.checker.plist \
+sed -e "s|__HOME__|$HOME|g" contrib/launchd/com.camurphy.checker.plist \
   > ~/Library/LaunchAgents/com.camurphy.checker.plist
 
 launchctl load ~/Library/LaunchAgents/com.camurphy.checker.plist
 ```
 
-The agent invokes deno through its mise shim rather than a bare `deno`, so it does not depend on `mise activate` having
-run — it will not have, in launchd's very minimal environment.
-
-Check that it came up, and watch the log:
-
-```shell
-launchctl list | grep checker
-tail -f ~/Library/Logs/checker.log
-```
+The agent logs to `~/Library/Logs/checker.log`.
 
 Config changes don't need a restart. Checker watches the config file and re-reads it on save, so adding a source or an
 item takes effect within a second; sources whose config didn't change keep their existing schedule and aren't
 re-checked. A config that fails to parse is logged and ignored, leaving the running config in place.
 
-To stop it, or to reload after pulling new code:
-
-```shell
-launchctl unload ~/Library/LaunchAgents/com.camurphy.checker.plist
-```
+Dropping a new plugin into the plugin directory also takes effect on the next config save. Editing an existing plugin
+needs the service restarted, as does installing a new binary.

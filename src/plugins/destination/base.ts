@@ -1,14 +1,13 @@
 import BasePlugin from '../base.ts';
 import { z } from 'zod';
 
-export type DestinationConfigShape = Record<string, never>;
+export type DestinationConfigShape = Record<never, never>;
 
 export const DestinationConfigSchema: z.ZodObject<DestinationConfigShape> = z.object({});
 
 export type DestinationConfig = z.infer<typeof DestinationConfigSchema>;
 
-export default abstract class BaseDestinationPlugin<TConfig extends DestinationConfig = DestinationConfig>
-  extends BasePlugin<TConfig> {
+export default abstract class BaseDestinationPlugin<TConfig extends object = object> extends BasePlugin<TConfig> {
   public static ConfigSchema = DestinationConfigSchema;
 
   public getSchema(): z.ZodObject<DestinationConfigShape> {

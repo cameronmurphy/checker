@@ -30,6 +30,45 @@ cp config.example.yml ~/.config/checker/config.yml
 vim ~/.config/checker/config.yml # Set up at least one source and destination
 ```
 
+### Contexts
+
+A context pairs the things you watch with where their updates go. Configs don't have to mention them: everything under
+`sources` and `destinations` belongs to a context named `default`, which is all most setups need.
+
+Reach for contexts when one group of sources should reach somewhere different from another — say a project's own
+dependencies driving a Claude Code routine for that project, while general-interest sources only reach your phone:
+
+```yaml
+config:
+  contexts:
+    default:
+      sources:
+        sheeran:
+          items: ['Australia']
+      destinations:
+        pushover: &pushover # An anchor, so other contexts can reuse these credentials
+          token: 'your-pushover-token'
+          user_key: 'your-user-key'
+    myapp:
+      sources:
+        docker:
+          items: ['nginx'] # The same plugin can watch different things in each context
+      destinations:
+        pushover: *pushover
+        claude_code:
+          routine_id: 'trig_01ABCDEFGHJKLMNOPQRSTUVW'
+          token: 'sk-ant-oat01-...'
+```
+
+Use one shape or the other — a config with `contexts` alongside top-level `sources`/`destinations` is rejected.
+`default` is only the name used when `contexts` is absent, so writing it out explicitly changes nothing, including the
+state already on disk.
+
+Each context keeps its own state, so two contexts watching the same thing notify independently. That also means **moving
+a source between contexts re-reads its items as first seen**, and it will notify once more from its new context.
+
+Within a context, a source notifies every destination unless it names a subset with `destinations`.
+
 ## Writing a plugin
 
 ### Sources

@@ -28,3 +28,44 @@ config:
       token: 'your-pushover-token'
       user_key: 'your-user-key'
       device: 'iphone' # Optional
+    # Fires a Claude Code cloud routine, which runs unattended against the repositories configured
+    # on the routine itself. Create the routine at https://claude.ai/code/routines, add an API
+    # trigger, and copy the id and token from the modal it shows.
+    claude_code:
+      routine_id: 'trig_01ABCDEFGHJKLMNOPQRSTUVW'
+      token: 'sk-ant-oat01-...' # Shown once when generated, and scoped to this one routine
+      # Optional, default '{{message}}'. {{message}} is substituted with the source's message.
+      # The routine's own saved prompt must reference the routine-fire-payload block to act on this.
+      prompt: |
+        This package was just updated. Upgrade the project.
+
+        {{message}}
+# Everything above lives in one context named 'default'. That's all most configs need, and the
+# `contexts` key below is the power-user alternative: each context pairs the things it watches with
+# where its updates go, so one project's dependencies can drive a Claude Code routine for that
+# project while general-interest sources just reach your phone.
+#
+# Use either shape, not both. Contexts are keyed by name, and 'default' is simply the name used when
+# `contexts` is absent — writing it out explicitly changes nothing, including the stored state.
+#
+# config:
+#   contexts:
+#     default:
+#       sources:
+#         sheeran:
+#           items: ['Australia']
+#       destinations:
+#         pushover: &pushover # An anchor, so other contexts can reuse these credentials
+#           token: 'your-pushover-token'
+#           user_key: 'your-user-key'
+#     myapp:
+#       sources:
+#         docker: # The same plugin can appear in several contexts, watching different things
+#           items: ['nginx']
+#         npm:
+#           items: ['filepond']
+#       destinations:
+#         pushover: *pushover
+#         claude_code:
+#           routine_id: 'trig_01ABCDEFGHJKLMNOPQRSTUVW'
+#           token: 'sk-ant-oat01-...'

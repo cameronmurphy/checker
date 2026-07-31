@@ -1,12 +1,14 @@
 import type BaseDestinationPlugin from '../plugins/destination/base.ts';
 import type BaseSourcePlugin from '../plugins/source/base.ts';
-import configure from '../plugins/configure.ts';
+import configure, { type ConfiguredContext, type PluginClass } from '../plugins/configure.ts';
 import { firstPassParse, secondPassParse } from '../config/parser.ts';
+import { toContexts } from '../config/schema.ts';
 import { load } from '../plugins/load.ts';
 import { closeState, getItemState, setItemState } from '../db/state.ts';
 import builtInSources from '../plugins/source/built-ins.ts';
 import builtInDestinations from '../plugins/destination/built-ins.ts';
 import { expand } from '../utils/path.ts';
+import { DEFAULT_CONTEXT } from '../constants.ts';
 import { basename, dirname } from '@std/path';
 
 const RELOAD_DEBOUNCE_MS = 500;
@@ -15,7 +17,12 @@ function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function contextLabel(context: string): string {
+  return context === DEFAULT_CONTEXT ? '' : `[${context}] `;
+}
+
 async function checkItem(
+  context: string,
   source: BaseSourcePlugin,
   destinations: BaseDestinationPlugin[],
   pluginName: string,
@@ -24,12 +31,12 @@ async function checkItem(
   const current = await source.read(item);
   if (!current) return;
 
-  const previous = await getItemState(pluginName, item);
+  const previous = await getItemState(context, pluginName, item);
 
   if (previous !== null && !source.updated(previous, current)) return;
 
   const msg = source.message(previous ?? '', current, item);
-  console.log(msg);
+  console.log(`${contextLabel(context)}${msg}`);
 
   const config = source.getConfig();
   const targetDestinations = config.destinations
@@ -48,14 +55,17 @@ async function checkItem(
   // Leave the stored state alone when nothing got through, so the next check retries
   // instead of silently swallowing the update.
   if (targetDestinations.length > 0 && !delivered.some(Boolean)) {
-    console.error(`No destination accepted the update for ${item}, retrying on next check`);
+    console.error(
+      `${contextLabel(context)}No destination accepted the update for ${item}, retrying on next check`,
+    );
     return;
   }
 
-  await setItemState(pluginName, item, current);
+  await setItemState(context, pluginName, item, current);
 }
 
 async function checkSource(
+  context: string,
   source: BaseSourcePlugin,
   destinations: BaseDestinationPlugin[],
 ) {
@@ -64,25 +74,32 @@ async function checkSource(
 
   for (const item of items) {
     try {
-      await checkItem(source, destinations, pluginName, item);
+      await checkItem(context, source, destinations, pluginName, item);
     } catch (error) {
-      console.error(`Check failed for ${pluginName}/${item}: ${describeError(error)}`);
+      console.error(`Check failed for ${contextLabel(context)}${pluginName}/${item}: ${describeError(error)}`);
     }
   }
 }
 
-async function loadConfiguredPlugins(configFile: string) {
+async function loadConfiguredContexts(configFile: string): Promise<ConfiguredContext[]> {
   const { config } = await firstPassParse(configFile);
 
-  const allSources = [...builtInSources, ...await load<BaseSourcePlugin>(config.source_plugin_dir)];
-  const allDestinations = [
+  const sourceClasses = [
+    ...builtInSources,
+    ...await load<PluginClass<BaseSourcePlugin>>(config.source_plugin_dir),
+  ];
+  const destinationClasses = [
     ...builtInDestinations,
-    ...await load<BaseDestinationPlugin>(config.destination_plugin_dir),
+    ...await load<PluginClass<BaseDestinationPlugin>>(config.destination_plugin_dir),
   ];
 
-  const { config: finalConfig } = await secondPassParse(configFile, allSources, allDestinations);
+  const { config: finalConfig } = await secondPassParse(
+    configFile,
+    sourceClasses.map((SourceClass) => new SourceClass()),
+    destinationClasses.map((DestinationClass) => new DestinationClass()),
+  );
 
-  return configure(finalConfig, allSources, allDestinations);
+  return configure(toContexts(finalConfig), sourceClasses, destinationClasses);
 }
 
 // Watching the directory rather than the config file itself survives the write-to-temp-then-rename
@@ -118,30 +135,44 @@ export default async function app({ configFile }: { configFile: string }) {
   let fingerprints = new Map<string, string>();
 
   const apply = async (reason: string) => {
-    const { sources, destinations } = await loadConfiguredPlugins(configFile);
+    const contexts = await loadConfiguredContexts(configFile);
 
     const previous = fingerprints;
-    fingerprints = new Map(sources.map((source) => [source.getName(), JSON.stringify(source.getConfig())]));
+    fingerprints = new Map();
+    timers.forEach(clearInterval);
+    timers = [];
 
     // Only sources whose config actually moved get an immediate check, so saving the file repeatedly
     // doesn't hammer every remote the config mentions.
-    const changed = sources.filter((source) => previous.get(source.getName()) !== fingerprints.get(source.getName()));
+    const changed: { context: string; source: BaseSourcePlugin; destinations: BaseDestinationPlugin[] }[] = [];
+    let monitored = 0;
 
-    timers.forEach(clearInterval);
-    timers = sources.map((source) =>
-      setInterval(() => {
-        checkSource(source, destinations).catch((error) => {
-          console.error(`Scheduled check failed: ${describeError(error)}`);
-        });
-      }, (source.getConfig().interval ?? 3600) * 1000)
-    );
+    for (const { name, sources, destinations } of contexts) {
+      for (const source of sources) {
+        monitored++;
+
+        const key = `${name}/${source.getName()}`;
+        const fingerprint = JSON.stringify(source.getConfig());
+        fingerprints.set(key, fingerprint);
+
+        if (previous.get(key) !== fingerprint) {
+          changed.push({ context: name, source, destinations });
+        }
+
+        timers.push(setInterval(() => {
+          checkSource(name, source, destinations).catch((error) => {
+            console.error(`Scheduled check failed: ${describeError(error)}`);
+          });
+        }, (source.getConfig().interval ?? 3600) * 1000));
+      }
+    }
 
     console.log(
-      `${reason} — monitoring ${sources.length} source(s)${changed.length ? `, checking ${changed.length} now` : ''}`,
+      `${reason} — monitoring ${monitored} source(s)${changed.length ? `, checking ${changed.length} now` : ''}`,
     );
 
-    for (const source of changed) {
-      await checkSource(source, destinations);
+    for (const { context, source, destinations } of changed) {
+      await checkSource(context, source, destinations);
     }
   };
 

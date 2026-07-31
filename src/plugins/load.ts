@@ -17,7 +17,7 @@ export async function load<T>(path: string): Promise<T[]> {
       const { default: PluginClass } = await import(entry.path);
 
       if (PluginClass) {
-        plugins.push(new PluginClass());
+        plugins.push(PluginClass);
       } else {
         console.error(`Plugin at ${entry.path} is invalid`);
       }

@@ -2,6 +2,16 @@ import app from '../../../src/cli/app.ts';
 import * as mock from '@std/testing/mock';
 import { emitConfigEvent, setConfig, setup, tearDown } from '../../mocks.ts';
 
+// The github source lists releases and the npm source reads a single package document, so the shape
+// depends on which endpoint is being called.
+function releaseResponse(input: string | URL | Request): Promise<Response> {
+  const body = String(input).includes('/releases')
+    ? [{ tag_name: 'v1.0.0' }]
+    : { tag_name: 'v1.0.0', version: '1.0.0' };
+
+  return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
+}
+
 async function waitFor(condition: () => boolean, timeoutMs = 5000) {
   const deadline = performance.now() + timeoutMs;
 
@@ -22,7 +32,7 @@ Deno.test({
     const fetchStub = mock.stub(
       globalThis,
       'fetch',
-      () => Promise.resolve(new Response(JSON.stringify({ tag_name: 'v1.0.0' }), { status: 200 })),
+      releaseResponse,
     );
 
     try {
@@ -83,7 +93,7 @@ Deno.test({
     const fetchStub = mock.stub(
       globalThis,
       'fetch',
-      () => Promise.resolve(new Response(JSON.stringify({ tag_name: 'v1.0.0', version: '1.0.0' }), { status: 200 })),
+      releaseResponse,
     );
 
     try {
@@ -133,7 +143,7 @@ Deno.test({
     const fetchStub = mock.stub(
       globalThis,
       'fetch',
-      () => Promise.resolve(new Response(JSON.stringify({ tag_name: 'v1.0.0' }), { status: 200 })),
+      releaseResponse,
     );
 
     try {

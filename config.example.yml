@@ -23,6 +23,15 @@ config:
         - 'nginx' # Untagged: notify on the highest new semver tag, i.e. a new release
         - 'grafana/grafana:latest' # Tagged: notify when that tag's digest changes, i.e. a rebuild
         - 'ghcr.io/home-assistant/home-assistant' # Any OCI registry, not just Docker Hub
+    nodejs:
+      interval: 3600
+      items:
+        # A bare major follows that release line, which is what a pinned .node-version means.
+        # Watching 'latest' instead would report every new Current release, including majors you
+        # aren't on.
+        - '24'
+        - 'lts' # Newest release on any line still marked LTS
+        - 'latest' # Newest release overall
   destinations:
     pushover:
       token: 'your-pushover-token'

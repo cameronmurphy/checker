@@ -1,5 +1,6 @@
 export default abstract class BasePlugin<TConfig extends object = object> {
   protected config: TConfig | null = null;
+  protected alias: string | null = null;
 
   public setConfig(config: TConfig): this {
     this.config = config;
@@ -12,6 +13,16 @@ export default abstract class BasePlugin<TConfig extends object = object> {
       throw new Error(`Plugin ${this.getName()} has not been configured`);
     }
     return this.config;
+  }
+
+  public setAlias(alias: string): this {
+    this.alias = alias;
+
+    return this;
+  }
+
+  public getAlias(): string {
+    return this.alias ?? this.getName();
   }
 
   public getName(): string {

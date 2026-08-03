@@ -16,7 +16,6 @@ Ensure `mise activate` is [in your shell rc/profile](https://mise.jdx.dev/cli/ac
 restart your terminal session.
 
 ```shell
-mise trust
 mise install
 ```
 
@@ -69,6 +68,62 @@ a source between contexts re-reads its items as first seen**, and it will notify
 
 Within a context, a source notifies every destination unless it names a subset with `destinations`.
 
+### Naming sources and destinations
+
+Each key under `sources` and `destinations` names one of them, and by default that name is the plugin's. Add `plugin:`
+to name it something else, which is what lets one plugin back several:
+
+```yaml
+config:
+  sources:
+    filepond: # A new stable release opens an upgrade PR
+      plugin: npm
+      items: ['filepond']
+      destinations: [claude_code]
+    filepond_beta: # A beta is just worth knowing about
+      plugin: npm
+      items: ['filepond@beta']
+      destinations: [pushover]
+  destinations:
+    pushover:
+      token: 'your-pushover-token'
+      user_key: 'your-user-key'
+    claude_code:
+      routine_id: 'trig_01ABCDEFGHJKLMNOPQRSTUVW'
+      token: 'sk-ant-oat01-...'
+```
+
+The name is what everything else refers to — a source's `destinations` list, and the `errors` block below — and
+referring to one that isn't configured is rejected rather than quietly notifying nobody. A source's state is stored
+under its name too, so **renaming a source re-reads its items as first seen**, the same as moving it between contexts.
+
+### Errors
+
+Failures anywhere in the daemon — a source that threw, a plugin that failed to load, a config that wouldn't parse — go
+to the daemon's log. Adding an `errors` key to a context sends them somewhere you'll actually see:
+
+```yaml
+config:
+  contexts:
+    default:
+      destinations:
+        updates:
+          plugin: log_file
+          path: '~/Library/Logs/checker-updates.log'
+        failures: # A second log file, so failures aren't buried in the updates
+          plugin: log_file
+          path: '~/Library/Logs/checker-errors.log'
+      errors:
+        destinations: [failures] # Optional, by default notify every destination in the context
+    myapp:
+      errors:
+        destinations: [pushover]
+```
+
+The default context's `errors` is the fallback: it covers every context that doesn't declare its own, plus the failures
+nothing can be attributed to. Above, `myapp`'s failures reach your phone and everything else lands in the log file. Each
+failure is reported once, so a source that's been down for a week doesn't notify on every check.
+
 ## Writing a plugin
 
 ### Sources
@@ -118,8 +173,8 @@ export default class SheeranSource extends BaseSourcePlugin<SheeranConfig> {
 }
 ```
 
-The class name determines the config key: `SheeranSource` has its `Source` suffix stripped and the rest snake-cased,
-giving `sheeran`.
+The class name determines the default config key: `SheeranSource` has its `Source` suffix stripped and the rest
+snake-cased, giving `sheeran`.
 
 Then you would configure this plugin like so:
 

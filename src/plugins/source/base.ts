@@ -60,7 +60,7 @@ export const SourceConfigSchema: z.ZodObject<SourceConfigShape> = z.object({
 export type SourceConfig = z.infer<typeof SourceConfigSchema>;
 
 /**
- * Extend this to write a source. The class name determines the config key: the `Source` suffix is
+ * Extend this to write a source. The class name determines the default config key: the `Source` suffix is
  * stripped and the rest snake-cased, so `ExampleSource` is configured as `example`.
  */
 export default abstract class BaseSourcePlugin<TConfig extends SourceConfig = SourceConfig>

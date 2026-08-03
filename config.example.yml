@@ -1,18 +1,20 @@
 config:
   source_plugin_dir: '~/.config/checker/plugins/source' # Optional, defaults to ~/.config/checker/plugins/source
   destination_plugin_dir: '~/.config/checker/plugins/destination' # Optional, defaults to ~/.config/checker/plugins/destination
+  # Each key names a source. That's the plugin's own name unless the entry says `plugin:`, which is
+  # how one plugin can back several sources — see 'filepond' and 'filepond_beta' below.
   sources:
     github:
       interval: 3600 # Optional, default 60 minutes (3600 seconds)
       items:
         - 'tus/tusd'
         - 'gotenberg/gotenberg'
-      destinations: [pushover] # Optional, by default notify all configured destinations
+      destinations: [pushover] # Optional, by default notify every destination in this context
     npm:
       interval: 3600
       tag: 'latest' # Optional, default 'latest'. The dist-tag tracked by items that don't specify one.
       items:
-        - 'filepond@beta' # Per-item override, using npm's own package@tag syntax
+        - 'vite'
         - '@types/node' # Scoped packages work as-is
     docker:
       interval: 3600
@@ -32,6 +34,17 @@ config:
         - '24'
         - 'lts' # Newest release on any line still marked LTS
         - 'latest' # Newest release overall
+    # The same plugin twice, under names of your choosing, so one package's stable and beta releases
+    # can be treated differently: a new filepond release opens an upgrade PR, while a beta only ever
+    # reaches your phone.
+    filepond:
+      plugin: npm
+      items: ['filepond']
+      destinations: [claude_code]
+    filepond_beta:
+      plugin: npm
+      items: ['filepond@beta'] # Per-item tag override, using npm's own package@tag syntax
+      destinations: [pushover]
   destinations:
     pushover:
       token: 'your-pushover-token'
@@ -49,6 +62,19 @@ config:
         This package was just updated. Upgrade the project.
 
         {{message}}
+    # Appends one line per notification, giving an audit trail separate from the daemon's own log.
+    log_file:
+      path: '~/Library/Logs/checker-notifications.log'
+    # A second log file, so failures don't get mixed in with the updates above.
+    failure_log:
+      plugin: log_file
+      path: '~/Library/Logs/checker-errors.log'
+  # Where failures go: a source that threw, a plugin that failed to load, a config that wouldn't
+  # parse, and the quieter ones like "Failed to fetch latest release for X", where a source has been
+  # returning nothing and looks identical to "no change". Omit the key entirely to keep failures on
+  # the daemon's own log only.
+  errors:
+    destinations: [failure_log] # Optional, by default notify every destination in this context
 # Everything above lives in one context named 'default'. That's all most configs need, and the
 # `contexts` key below is the power-user alternative: each context pairs the things it watches with
 # where its updates go, so one project's dependencies can drive a Claude Code routine for that
@@ -67,6 +93,13 @@ config:
 #         pushover: &pushover # An anchor, so other contexts can reuse these credentials
 #           token: 'your-pushover-token'
 #           user_key: 'your-user-key'
+#         log_file:
+#           path: '~/Library/Logs/checker-errors.log'
+#       # The default context's errors cover the whole daemon, minus any context that reports its
+#       # own below. Failures nothing can be attributed to — a config that wouldn't parse, a plugin
+#       # that failed to load — always land here.
+#       errors:
+#         destinations: [log_file]
 #     myapp:
 #       sources:
 #         docker: # The same plugin can appear in several contexts, watching different things
@@ -78,3 +111,5 @@ config:
 #         claude_code:
 #           routine_id: 'trig_01ABCDEFGHJKLMNOPQRSTUVW'
 #           token: 'sk-ant-oat01-...'
+#       errors: # This context's failures go here instead of the default context's fallback
+#         destinations: [pushover]

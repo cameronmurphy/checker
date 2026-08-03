@@ -40,7 +40,7 @@ export const DestinationConfigSchema: z.ZodObject<DestinationConfigShape> = z.ob
 export type DestinationConfig = z.infer<typeof DestinationConfigSchema>;
 
 /**
- * Extend this to write a destination. The class name determines the config key: the `Destination`
+ * Extend this to write a destination. The class name determines the default config key: the `Destination`
  * suffix is stripped and the rest snake-cased, so `ExampleDestination` is configured as `example`.
  */
 export default abstract class BaseDestinationPlugin<TConfig extends object = object> extends BasePlugin<TConfig> {

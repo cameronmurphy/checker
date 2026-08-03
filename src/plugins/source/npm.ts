@@ -27,7 +27,7 @@ export class NpmSource extends BaseSourcePlugin<NpmConfig> {
     const { name, tag } = this.parseItem(item);
     const range = tryParseRange(tag);
 
-    return range ? await this.readRange(name, tag, range) : await this.readTag(name, tag);
+    return range ? await this.readRange(name, range) : await this.readTag(name, tag);
   }
 
   public override updated(before: string, after: string): boolean {
@@ -60,7 +60,7 @@ export class NpmSource extends BaseSourcePlugin<NpmConfig> {
     return release.version ?? '';
   }
 
-  private async readRange(name: string, range: string, parsed: Range): Promise<string> {
+  private async readRange(name: string, range: Range): Promise<string> {
     const response = await fetch(`${REGISTRY}/${name}`, { headers: { Accept: PACKUMENT_ACCEPT } });
 
     if (!response.ok) {
@@ -72,7 +72,7 @@ export class NpmSource extends BaseSourcePlugin<NpmConfig> {
     const versions = Object.keys(packument.versions ?? {})
       .map((version) => tryParse(version))
       .filter((version) => version !== undefined);
-    const latest = maxSatisfying(versions, parsed);
+    const latest = maxSatisfying(versions, range);
 
     // A range nothing satisfies yet is the normal state of a watch on the next major, not a failure:
     // '^5' is meant to say nothing until 5.0.0 exists. A typo'd range looks identical from here, so

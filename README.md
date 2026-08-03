@@ -273,7 +273,9 @@ sed -e "s|__HOME__|$HOME|g" contrib/launchd/com.camurphy.checker.plist \
 launchctl load ~/Library/LaunchAgents/com.camurphy.checker.plist
 ```
 
-The agent logs to `~/Library/Logs/checker.log`.
+The launch agent redirects checker's output to `~/Library/Logs/checker.log`; change `StandardOutPath` and
+`StandardErrorPath` in the plist to put it elsewhere. That file is the record of what the daemon did, not a place to
+watch for trouble — configure [errors](#errors) to have failures notify a destination.
 
 Config changes don't need a restart. Checker watches the config file and re-reads it on save, so adding a source or an
 item takes effect within a second; sources whose config didn't change keep their existing schedule and aren't

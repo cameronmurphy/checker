@@ -11,7 +11,6 @@ config:
         - 'gotenberg/gotenberg'
       destinations: [pushover] # Optional, by default notify every destination in this context
     npm:
-      interval: 3600
       tag: 'latest' # Optional, default 'latest'. The track followed by items that don't name their own.
       items:
         - 'vite'
@@ -24,7 +23,6 @@ config:
         # ask for them, so '^5' waits for 5.0.0 while '^5.0.0-0' follows the betas leading up to it.
         - 'vite@^5'
     docker:
-      interval: 3600
       prereleases: false # Optional, default false. Whether tags like '1.2.3-rc1' or '1.2.3-alpine' count as releases.
       # username: 'user' # Optional, for private repositories
       # password: 'token'
@@ -33,7 +31,6 @@ config:
         - 'grafana/grafana:latest' # Tagged: notify when that tag's digest changes, i.e. a rebuild
         - 'ghcr.io/home-assistant/home-assistant' # Any OCI registry, not just Docker Hub
     nodejs:
-      interval: 3600
       items:
         # A bare major follows that release line, which is what a pinned .node-version means.
         # Watching 'latest' instead would report every new Current release, including majors you
@@ -50,9 +47,12 @@ config:
       destinations: [claude_code]
     filepond_next:
       plugin: npm
-      # Nothing satisfies this until 5.0.0 ships, which is the point: a range matching no version is
-      # a watch waiting, not an error, so it stays silent instead of reporting itself every check.
-      items: ['filepond@^5']
+      # The '-0' is a prerelease floor, and it's the difference between hearing about the next major
+      # early and hearing about it once: plain '^5' means a stable 5.x, so it would sit silent
+      # through the entire beta series. This follows the 5.0.0 prereleases, then 5.0.0 itself, then
+      # 5.x — and never 6, because the prerelease window belongs to 5.0.0 alone. Until something
+      # matches, a range is a watch waiting rather than an error, and says nothing.
+      items: ['filepond@^5.0.0-0']
       destinations: [pushover]
   destinations:
     pushover:

@@ -3,15 +3,18 @@ name: Build
 on:
   workflow_dispatch:
   push:
-    tags: ['v*']
-  workflow_run:
-    workflows: [Lint and test]
-    types: [completed]
     branches: [main]
+    tags: ['v*']
 
 jobs:
+  # Every path into this workflow lints and tests first, so a tag can't build, release or publish
+  # what main wouldn't. Waiting on the separate run of Lint and test only covered pushes to main; a
+  # tag pushed at the same time raced past it.
+  verify:
+    uses: ./.github/workflows/lint-and-test.yml
+
   build:
-    if: ${{ github.event.workflow_run && github.event.workflow_run.conclusion == 'success' || !github.event.workflow_run }}
+    needs: verify
     runs-on: ubuntu-latest
 
     strategy:

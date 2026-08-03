@@ -12,10 +12,17 @@ config:
       destinations: [pushover] # Optional, by default notify every destination in this context
     npm:
       interval: 3600
-      tag: 'latest' # Optional, default 'latest'. The dist-tag tracked by items that don't specify one.
+      tag: 'latest' # Optional, default 'latest'. The track followed by items that don't name their own.
       items:
         - 'vite'
         - '@types/node' # Scoped packages work as-is
+        # An item's suffix is npm's own package@spec syntax, and it can be either of two things.
+        # A dist-tag follows whatever the maintainer currently labels that way, across majors:
+        - 'filepond@beta'
+        # A semver range instead pins the watch to one line, and can't drift. Anything npm
+        # understands works: '^5', '~5.2', '5.x', '>=5 <6'. Ranges exclude prereleases unless they
+        # ask for them, so '^5' waits for 5.0.0 while '^5.0.0-0' follows the betas leading up to it.
+        - 'vite@^5'
     docker:
       interval: 3600
       prereleases: false # Optional, default false. Whether tags like '1.2.3-rc1' or '1.2.3-alpine' count as releases.
@@ -34,16 +41,18 @@ config:
         - '24'
         - 'lts' # Newest release on any line still marked LTS
         - 'latest' # Newest release overall
-    # The same plugin twice, under names of your choosing, so one package's stable and beta releases
-    # can be treated differently: a new filepond release opens an upgrade PR, while a beta only ever
-    # reaches your phone.
+    # The same plugin twice, under names of your choosing, so the line you're on and the one you
+    # aren't can be treated differently: a 4.x release opens an upgrade PR, while the major you
+    # haven't budgeted for only ever reaches your phone.
     filepond:
       plugin: npm
-      items: ['filepond']
+      items: ['filepond@^4']
       destinations: [claude_code]
-    filepond_beta:
+    filepond_next:
       plugin: npm
-      items: ['filepond@beta'] # Per-item tag override, using npm's own package@tag syntax
+      # Nothing satisfies this until 5.0.0 ships, which is the point: a range matching no version is
+      # a watch waiting, not an error, so it stays silent instead of reporting itself every check.
+      items: ['filepond@^5']
       destinations: [pushover]
   destinations:
     pushover:

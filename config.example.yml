@@ -5,7 +5,7 @@ config:
   # how one plugin can back several sources — see 'filepond' and 'filepond_beta' below.
   sources:
     github:
-      interval: 3600 # Optional, default 60 minutes (3600 seconds)
+      interval: 1800 # Optional, default 60 minutes (3600 seconds)
       items:
         - 'tus/tusd'
         - 'gotenberg/gotenberg'
@@ -38,6 +38,16 @@ config:
         - '24'
         - 'lts' # Newest release on any line still marked LTS
         - 'latest' # Newest release overall
+    page:
+      items:
+        # Notifies when the content at a URL changes at all — an API you integrate against, a
+        # policy, a support schedule, anything with no release or feed to track. The body is
+        # hashed, so the notification says a page moved, not what moved.
+        #
+        # Point it at the plainest form of a page you can find: the '.md' a docs site builds a page
+        # from, or raw.githubusercontent.com rather than the rendered file on github.com. Rendered
+        # pages tend to return a different body every request, which would notify on every check.
+        - 'https://docs.stripe.com/api/payment_intents.md'
     # The same plugin twice, under names of your choosing, so the line you're on and the one you
     # aren't can be treated differently: a 4.x release opens an upgrade PR, while the major you
     # haven't budgeted for only ever reaches your phone.

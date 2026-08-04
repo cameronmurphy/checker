@@ -5,7 +5,7 @@ import ErrorReporter from './error-reporter.ts';
 import checkSource from './check.ts';
 import loadContexts from './load-contexts.ts';
 import watchConfigFile from './watch-config.ts';
-import { closeState } from '../db/state.ts';
+import { closeState, collectOrphans, type WatchedItem } from '../db/state.ts';
 import { captureErrors } from '../db/errors.ts';
 import { describeError } from '../utils/format.ts';
 
@@ -29,6 +29,7 @@ export default async function app({ configFile }: { configFile: string }) {
     // Only sources whose config actually moved get an immediate check, so saving the file repeatedly
     // doesn't hammer every remote the config mentions.
     const changed: { context: string; source: BaseSourcePlugin; destinations: BaseDestinationPlugin[] }[] = [];
+    const watched: WatchedItem[] = [];
     let monitored = 0;
 
     for (const { name, sources, destinations } of contexts) {
@@ -38,6 +39,10 @@ export default async function app({ configFile }: { configFile: string }) {
         const key = `${name}/${source.getAlias()}`;
         const fingerprint = JSON.stringify(source.getConfig());
         fingerprints.set(key, fingerprint);
+
+        for (const item of source.getConfig().items ?? ['']) {
+          watched.push({ context: name, plugin: source.getAlias(), item });
+        }
 
         if (previous.get(key) !== fingerprint) {
           changed.push({ context: name, source, destinations });
@@ -54,6 +59,16 @@ export default async function app({ configFile }: { configFile: string }) {
     console.log(
       `${reason} — monitoring ${monitored} source(s)${changed.length ? `, checking ${changed.length} now` : ''}`,
     );
+
+    const collected = await collectOrphans(watched);
+
+    if (collected.length > 0) {
+      console.log(
+        `Forgot ${collected.length} item(s) the config no longer watches: ${
+          collected.map((key) => key.join('/')).join(', ')
+        }`,
+      );
+    }
 
     for (const { context, source, destinations } of changed) {
       await checkSource(context, source, destinations);

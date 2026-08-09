@@ -1,5 +1,7 @@
 name: Build
-run-name: Build ${{ github.event.workflow_run.head_branch || github.ref_name }}
+run-name: >-
+  Build ${{ github.event.workflow_run.head_branch || github.ref_name }}${{
+  github.event.workflow_run.display_title && format(' ({0})', github.event.workflow_run.display_title) || '' }}
 
 on:
   workflow_dispatch:

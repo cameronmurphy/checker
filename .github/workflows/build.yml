@@ -31,6 +31,17 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
+      - name: Check deno.json matches the tag
+        if: startsWith(github.event.workflow_run.head_branch, 'v')
+        env:
+          TAG: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          version=v$(jq -r .version deno.json)
+          if [ "$version" != "$TAG" ]; then
+            echo "::error::deno.json is $version but the tag is $TAG — bump deno.json and retag"
+            exit 1
+          fi
+
       - name: Install
         uses: ./.github/actions/install
 

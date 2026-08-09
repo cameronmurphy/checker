@@ -7,3 +7,8 @@ export function describeError(error: unknown): string {
 export function contextLabel(context: string): string {
   return context === DEFAULT_CONTEXT ? '' : `[${context}] `;
 }
+
+export function urlLabel(item: string): string {
+  const { hostname, pathname } = new URL(item);
+  return pathname.split('/').filter(Boolean).pop() ?? hostname;
+}

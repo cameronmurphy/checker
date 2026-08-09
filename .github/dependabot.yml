@@ -1,0 +1,17 @@
+version: 2
+
+updates:
+  - package-ecosystem: 'github-actions'
+    directories:
+      - '/'
+      - '/.github/actions/install'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 20
+
+  # deno.json / deno.lock — the JSR and npm imports. Ungrouped, so a major arrives on its own.
+  - package-ecosystem: 'deno'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 20

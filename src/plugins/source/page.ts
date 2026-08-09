@@ -1,5 +1,6 @@
 import BaseSourcePlugin, { SourceConfigSchema } from './base.ts';
 import CaseInsensitiveComparator from '../../comparator/case-insensitive.ts';
+import { urlLabel } from '../../utils/format.ts';
 import { z } from 'zod';
 
 const PageConfigSchema = SourceConfigSchema.extend({
@@ -7,11 +8,6 @@ const PageConfigSchema = SourceConfigSchema.extend({
 });
 
 type PageConfig = z.infer<typeof PageConfigSchema>;
-
-function label(item: string): string {
-  const { hostname, pathname } = new URL(item);
-  return pathname.split('/').filter(Boolean).pop() ?? hostname;
-}
 
 export class PageSource extends BaseSourcePlugin<PageConfig> {
   private readonly comparator = new CaseInsensitiveComparator();
@@ -42,8 +38,8 @@ export class PageSource extends BaseSourcePlugin<PageConfig> {
 
   public override message(before: string, after: string, item: string): string {
     if (!before) {
-      return `${label(item)}: watching (${after.slice(0, 12)})`;
+      return `${urlLabel(item)}: watching (${after.slice(0, 12)})`;
     }
-    return `${label(item)}: the page changed (${before.slice(0, 12)} → ${after.slice(0, 12)})`;
+    return `${urlLabel(item)}: the page changed (${before.slice(0, 12)} → ${after.slice(0, 12)})`;
   }
 }

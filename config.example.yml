@@ -48,6 +48,18 @@ config:
         # from, or raw.githubusercontent.com rather than the rendered file on github.com. Rendered
         # pages tend to return a different body every request, which would notify on every check.
         - 'https://docs.stripe.com/api/payment_intents.md'
+    text:
+      # Optional, default 'case_insensitive', which reports any change. 'semver' instead reports
+      # only an increase, so a channel that republishes an older build than the one before it stays
+      # quiet. Values that aren't semver still notify on any change under it, rather than going
+      # silent.
+      comparator: 'semver'
+      items:
+        # For an endpoint whose entire body is the value — a version, a build number, a channel
+        # marker. Unlike 'page' the body is stored rather than hashed, so the notification carries
+        # the value itself and a destination can act on it. Bodies longer than one short line are
+        # refused, since storing a whole page is what 'page' is for.
+        - 'https://dl.deno.land/release-lts-latest.txt'
     # The same plugin twice, under names of your choosing, so the line you're on and the one you
     # aren't can be treated differently: a 4.x release opens an upgrade PR, while the major you
     # haven't budgeted for only ever reaches your phone.

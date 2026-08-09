@@ -1,20 +1,19 @@
 name: Build
+run-name: Build ${{ github.event.workflow_run.head_branch || github.ref_name }}
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    tags: ['v*']
+  workflow_run:
+    workflows: ['Lint and test']
+    types: [completed]
 
 jobs:
-  # Every path into this workflow lints and tests first, so a tag can't build, release or publish
-  # what main wouldn't. Waiting on the separate run of Lint and test only covered pushes to main; a
-  # tag pushed at the same time raced past it.
-  verify:
-    uses: ./.github/workflows/lint-and-test.yml
-
   build:
-    needs: verify
+    if: >-
+      ${{ !github.event.workflow_run
+      || (github.event.workflow_run.conclusion == 'success'
+      && (github.event.workflow_run.head_branch == 'main'
+      || startsWith(github.event.workflow_run.head_branch, 'v'))) }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -27,6 +26,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Install
         uses: ./.github/actions/install
@@ -43,8 +44,9 @@ jobs:
         with:
           name: checker-${{ matrix.target }}
           path: dist/checker-${{ matrix.target }}
+
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.event.workflow_run.head_branch, 'v')
     needs: build
     runs-on: ubuntu-latest
 
@@ -63,13 +65,14 @@ jobs:
       - name: Publish release assets
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.workflow_run.head_branch }}
         run: |
-          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 ||
-            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes
-          gh release upload "$GITHUB_REF_NAME" dist/checker-* --repo "$GITHUB_REPOSITORY" --clobber
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 ||
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --generate-notes
+          gh release upload "$TAG" dist/checker-* --repo "$GITHUB_REPOSITORY" --clobber
 
   publish:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.event.workflow_run.head_branch, 'v')
     needs: build
     runs-on: ubuntu-latest
 
@@ -80,6 +83,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Install
         uses: ./.github/actions/install

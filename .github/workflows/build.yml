@@ -73,6 +73,12 @@ jobs:
           path: dist
           merge-multiple: true
 
+      # self-update verifies a download against this before replacing the running binary, so it has
+      # to be generated here rather than trusted from the asset itself.
+      - name: Checksum the binaries
+        working-directory: dist
+        run: sha256sum checker-* > SHA256SUMS
+
       # Tags can already have a release (they get one when publishing to JSR), and a run can be
       # repeated, so create only when missing and let the upload overwrite.
       - name: Publish release assets
@@ -82,7 +88,7 @@ jobs:
         run: |
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 ||
             gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --generate-notes
-          gh release upload "$TAG" dist/checker-* --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload "$TAG" dist/checker-* dist/SHA256SUMS --repo "$GITHUB_REPOSITORY" --clobber
 
   publish:
     if: startsWith(github.event.workflow_run.head_branch, 'v')

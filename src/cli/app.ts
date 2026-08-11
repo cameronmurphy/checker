@@ -5,6 +5,8 @@ import ErrorReporter from './error-reporter.ts';
 import checkSource from './check.ts';
 import loadContexts from './load-contexts.ts';
 import watchConfigFile from './watch-config.ts';
+import selfUpdate from './self-update.ts';
+import { listen, type Reply } from './socket.ts';
 import { closeState, collectOrphans, type WatchedItem } from '../db/state.ts';
 import { captureErrors } from '../db/errors.ts';
 import { describeError } from '../utils/format.ts';
@@ -82,6 +84,17 @@ export default async function app({ configFile }: { configFile: string }) {
   let queued = apply('Checker started');
   await queued;
 
+  // Only exits once the binary was actually replaced, so a no-op check doesn't cost a restart.
+  const listener = await listen(configFile, async (command): Promise<Reply> => {
+    if (command !== 'self-update') {
+      return { ok: false, message: `Unknown command "${command}"` };
+    }
+
+    const { updated, message } = await selfUpdate();
+
+    return { ok: true, message, exit: updated };
+  });
+
   const watcher = watchConfigFile(configFile, () => {
     queued = queued
       .then(() => apply('Config reloaded'))
@@ -93,6 +106,7 @@ export default async function app({ configFile }: { configFile: string }) {
   const shutdown = () => {
     console.log('\nShutting down...');
     watcher?.close();
+    listener?.close();
     closeState();
     Deno.exit(0);
   };

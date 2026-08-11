@@ -283,3 +283,18 @@ re-checked. A config that fails to parse is logged and ignored, leaving the runn
 
 Dropping a new plugin into the plugin directory also takes effect on the next config save. Editing an existing plugin
 needs the service restarted, as does installing a new binary.
+
+### Updating
+
+```shell
+checker self-update
+```
+
+This asks the running service to replace itself with the newest release for its platform, rather than doing the work in
+your shell — the CLI reaches it over a socket beside the config file, so the two can't disagree about which binary is
+installed. The download is checked against the `SHA256SUMS` published with the release and discarded if it doesn't
+match, and the previous binary is kept alongside as `checker.previous`.
+
+Nothing happens when the running version is already the newest. When it isn't, the binary is swapped and the service
+exits so `KeepAlive` restarts it on the new one — the swap is a rename, so the running process keeps the binary it
+started from until that moment.

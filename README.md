@@ -97,6 +97,26 @@ The name is what everything else refers to — a source's `destinations` list, a
 referring to one that isn't configured is rejected rather than quietly notifying nobody. A source's state is stored
 under its name too, so **renaming a source re-reads its items as first seen**, the same as moving it between contexts.
 
+A YAML anchor is the way to share one set of credentials across [contexts](#contexts), and an alias of it doesn't need
+`plugin:` even where the name it lands under isn't the plugin's. The definition the anchor sits on is keyed by the
+plugin name, and that travels with it:
+
+```yaml
+config:
+  contexts:
+    wrx:
+      destinations:
+        claude_code: &claude_code_wrx # Keyed by the plugin, so the alias below knows what it is
+          routine_id: 'trig_01ABCDEFGHJKLMNOPQRSTUVW'
+          token: 'sk-ant-oat01-...'
+    node:
+      destinations:
+        claude_code_wrx: *claude_code_wrx # The same routine, under the name this context uses
+```
+
+That only applies to an alias of a definition keyed by a plugin name. One written out under a name of your own still
+needs `plugin:`, since there's nothing for it to have come from.
+
 ### Errors
 
 Failures anywhere in the daemon — a source that threw, a plugin that failed to load, a config that wouldn't parse — go

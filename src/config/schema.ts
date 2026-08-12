@@ -5,7 +5,7 @@ import type { ContextConfigType, PluginsConfigType } from '../types/final-config
 import type FinalConfigType from '../types/final-config.type.ts';
 import { z } from 'zod';
 
-const ErrorsSchema = z.object({
+const ErrorsSchema = z.strictObject({
   destinations: z.array(z.string()).optional(),
 });
 
@@ -13,14 +13,14 @@ const ErrorsSchema = z.object({
 // unless `plugin` says otherwise, which is how one plugin backs several sources or destinations.
 const AliasedPluginSchema = z.looseObject({ plugin: z.string().optional() });
 
-const ContextSchema = z.object({
+const ContextSchema = z.strictObject({
   sources: z.record(z.string(), AliasedPluginSchema).default({}),
   destinations: z.record(z.string(), AliasedPluginSchema).default({}),
   errors: ErrorsSchema.optional(),
 });
 
-const ConfigSchema = z.object({
-  config: z.object({
+const ConfigSchema = z.strictObject({
+  config: z.strictObject({
     source_plugin_dir: z.string().default(DEFAULT_SOURCE_PLUGIN_DIR),
     destination_plugin_dir: z.string().default(DEFAULT_DESTINATION_PLUGIN_DIR),
     sources: z.record(z.string(), AliasedPluginSchema).optional(),
@@ -66,14 +66,16 @@ export function buildSecondPassSchema(
   const sourcesSchema = buildPluginsSchema('source', sources);
   const destinationsSchema = buildPluginsSchema('destination', destinations);
 
-  const knownContextSchema = z.object({
+  const knownContextSchema = z.strictObject({
     sources: sourcesSchema.default({}),
     destinations: destinationsSchema.default({}),
     errors: ErrorsSchema.optional(),
   });
 
   return ConfigSchema.extend({
-    config: z.object({
+    config: z.strictObject({
+      source_plugin_dir: z.string().default(DEFAULT_SOURCE_PLUGIN_DIR),
+      destination_plugin_dir: z.string().default(DEFAULT_DESTINATION_PLUGIN_DIR),
       sources: sourcesSchema.optional(),
       destinations: destinationsSchema.optional(),
       errors: ErrorsSchema.optional(),

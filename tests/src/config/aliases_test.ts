@@ -140,3 +140,39 @@ config:
     'Unknown destination "failures" in context "default"',
   );
 });
+
+Deno.test('a key checker does not know is rejected rather than dropped', () => {
+  const error = assertThrows(() =>
+    parse(`
+config:
+  contexts:
+    pie:
+      source:
+        github:
+          items: ['php/pie']
+      destinations:
+        log_file:
+          path: '~/pie.log'
+`)
+  );
+
+  assertStringIncludes(String(error), 'Unrecognized key');
+  assertStringIncludes(String(error), 'source');
+});
+
+Deno.test('the plugin directories survive the second pass', () => {
+  const config = parse(`
+config:
+  source_plugin_dir: '~/plugins/source'
+  destination_plugin_dir: '~/plugins/destination'
+  sources:
+    github:
+      items: ['a/b']
+  destinations:
+    log_file:
+      path: '~/x.log'
+`);
+
+  assertEquals(config.source_plugin_dir, '~/plugins/source');
+  assertEquals(config.destination_plugin_dir, '~/plugins/destination');
+});

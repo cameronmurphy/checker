@@ -46,11 +46,20 @@ jobs:
         uses: ./.github/actions/install
 
       # --include bundles everything plugins can import; without it a plugin importing, say,
-      # checker/comparator/strlen fails to load in the compiled binary.
+      # checker/comparator/strlen fails to load in the compiled binary. The example config is
+      # included for the same reason: a first run writes it out.
       - name: Build
         run: |
           deno compile --allow-env --allow-read --allow-net --allow-write --allow-ffi --include ./src \
+            --include ./config.example.yml \
             --target ${{ matrix.target }} --output dist/checker-${{ matrix.target }} main.ts
+
+      - name: Check a first run sets up a config
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: |
+          home=$(mktemp -d)
+          HOME=$home timeout 60 dist/checker-${{ matrix.target }}
+          diff "$home/.config/checker/config.yml" config.example.yml
 
       - name: Upload compiled app
         uses: actions/upload-artifact@v7

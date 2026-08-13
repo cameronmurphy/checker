@@ -4,6 +4,7 @@ import type { ConfiguredContext } from '../plugins/configure.ts';
 import ErrorReporter from './error-reporter.ts';
 import checkSource from './check.ts';
 import loadContexts from './load-contexts.ts';
+import scaffoldConfig from './scaffold.ts';
 import watchConfigFile from './watch-config.ts';
 import selfUpdate from './self-update.ts';
 import { listen, type Reply } from './socket.ts';
@@ -12,6 +13,17 @@ import { captureErrors } from '../db/errors.ts';
 import { describeError } from '../utils/format.ts';
 
 export default async function app({ configFile }: { configFile: string }) {
+  const created = await scaffoldConfig(configFile).catch((error) => {
+    console.error(`There's no config file, and writing the example one failed: ${describeError(error)}`);
+    Deno.exit(1);
+  });
+
+  if (created) {
+    console.log(`No config file yet, so the example one is now at ${created}`);
+    console.log('As it stands it follows the ISS; edit it to watch what you care about, then start checker again.');
+    return;
+  }
+
   captureErrors();
 
   let timers: ReturnType<typeof setInterval>[] = [];

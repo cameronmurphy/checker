@@ -60,6 +60,16 @@ export function setup() {
   const encoder = new TextEncoder();
   stubs.push(mock.stub(Deno, 'readFile', () => Promise.resolve(new Uint8Array(encoder.encode(currentConfig)))));
 
+  // The config is the one path that exists under the mocked HOME, so a first run doesn't scaffold over it.
+  stubs.push(mock.stub(
+    Deno,
+    'stat',
+    (path: string | URL) =>
+      String(path) === MOCK_CONFIG_PATH
+        ? Promise.resolve({} as Deno.FileInfo)
+        : Promise.reject(new Deno.errors.NotFound()),
+  ));
+
   // The state module ensures its parent directory exists; keep that off the real filesystem.
   stubs.push(mock.stub(Deno, 'mkdir', () => Promise.resolve()));
 

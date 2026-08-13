@@ -4,30 +4,34 @@
 
 Get notified when stuff changes.
 
-## Dev setup (macOS)
+## Install
 
-Install [Homebrew](https://brew.sh).
-
-```shell
-brew bundle
-```
-
-Ensure `mise activate` is [in your shell rc/profile](https://mise.jdx.dev/cli/activate.html). If it needed to be added,
-restart your terminal session.
+Every release ships a binary per target; grab the one matching your machine — `checker-aarch64-apple-darwin` for Apple
+Silicon, `checker-x86_64-unknown-linux-gnu` or `checker-aarch64-unknown-linux-gnu` for Linux.
 
 ```shell
-mise install
+mkdir -p ~/.local/bin
+curl -fsSL -o ~/.local/bin/checker https://github.com/cameronmurphy/checker/releases/latest/download/checker-aarch64-apple-darwin
+chmod +x ~/.local/bin/checker
 ```
 
 ## Configuration
 
-Copy the example config to the default location and customise as necessary.
+Checker reads `~/.config/checker/config.yml`. Starting it without one writes the example config there and stops, so the
+first run is the setup step:
 
 ```shell
-mkdir -p ~/.config/checker
-cp config.example.yml ~/.config/checker/config.yml
-vim ~/.config/checker/config.yml # Set up at least one source and destination
+checker # Writes ~/.config/checker/config.yml
+vim ~/.config/checker/config.yml # Set up what you want to watch
+checker # Starts monitoring
 ```
+
+That config runs as it stands, with no credentials to fill in first: it follows the International Space Station and
+appends a line to `/tmp/checker-notifications.log` every time it moves, so a fresh install does something you can see
+and nothing you have to clean up. Every other built-in source and destination is in there too, commented out and already
+indented where it belongs, so swapping the ISS for what you actually care about is mostly uncommenting. Nothing needs to
+be cloned or copied by hand — the binary carries the example. Pointing `--config-file` somewhere else works the same
+way: checker writes it at whatever path it was told to read.
 
 ### Contexts
 
@@ -230,6 +234,21 @@ plugin can't stop the rest from running.
 Adding a plugin file only needs a config save to pick it up, but _editing_ one needs a restart — the runtime caches
 modules it has already loaded.
 
+## Dev setup (macOS)
+
+Install [Homebrew](https://brew.sh).
+
+```shell
+brew bundle
+```
+
+Ensure `mise activate` is [in your shell rc/profile](https://mise.jdx.dev/cli/activate.html). If it needed to be added,
+restart your terminal session.
+
+```shell
+mise install
+```
+
 ## Scripts
 
 ### Dev
@@ -270,17 +289,9 @@ deno outdated --update
 
 ## Running as a service (macOS)
 
-Checker polls on its own schedule, so it wants to stay resident rather than be re-launched on a timer.
-
-The service runs the compiled binary. Every release ships one per target; grab the one matching your machine —
-`checker-aarch64-apple-darwin` for Apple Silicon, `checker-x86_64-unknown-linux-gnu` or
-`checker-aarch64-unknown-linux-gnu` for Linux.
-
-```shell
-mkdir -p ~/.local/bin
-curl -fsSL -o ~/.local/bin/checker https://github.com/cameronmurphy/checker/releases/latest/download/checker-aarch64-apple-darwin
-chmod +x ~/.local/bin/checker
-```
+Checker polls on its own schedule, so it wants to stay resident rather than be re-launched on a timer. The service runs
+the [installed binary](#install) against a config you've already set up — a service that starts with no config writes
+the example one and exits, and `KeepAlive` will keep restarting it into the placeholders.
 
 Install the launch agent, substituting your home directory for the placeholder. Run it from the repository root so the
 template path resolves.

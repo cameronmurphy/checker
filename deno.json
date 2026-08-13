@@ -1,6 +1,6 @@
 {
   "name": "@camurphy/checker",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "license": "MIT",
   "exports": {
     "./plugins/source": "./src/plugins/source/base.ts",
@@ -15,13 +15,13 @@
   "unstable": ["kv"],
   "exclude": [".claude"],
   "publish": {
-    "exclude": ["tests", "contrib", ".github", "config.example.yml"]
+    "exclude": ["tests", "contrib", ".github"]
   },
   "tasks": {
     "dev": "deno run --allow-env --allow-read --allow-net --allow-write --allow-ffi --watch main.ts",
     "run": "deno run --allow-env --allow-read --allow-net --allow-write --allow-ffi main.ts",
     "test": "deno test --allow-env --allow-read --allow-net --allow-write",
-    "compile": "deno compile --allow-env --allow-read --allow-net --allow-write --allow-ffi --include ./src --output dist/checker main.ts"
+    "compile": "deno compile --allow-env --allow-read --allow-net --allow-write --allow-ffi --include ./src --include ./config.example.yml --output dist/checker main.ts"
   },
   "imports": {
     "checker/plugins/source": "./src/plugins/source/base.ts",

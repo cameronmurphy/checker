@@ -46,6 +46,11 @@ async function fetchAsset(release: Release, name: string): Promise<Uint8Array<Ar
  * from and stays intact until it exits.
  */
 export default async function selfUpdate(): Promise<UpdateResult> {
+  // Run from source, Deno.execPath() is the deno binary, and replacing that is not the ask.
+  if (!Deno.build.standalone) {
+    throw new Error('This checker is running from source, so there is no released binary of its own to replace');
+  }
+
   const response = await fetch(RELEASES_API, { headers: { accept: 'application/vnd.github+json' } });
 
   if (!response.ok) {

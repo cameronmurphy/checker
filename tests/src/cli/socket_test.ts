@@ -1,4 +1,4 @@
-import { listen, type Reply, send, socketPath } from '../../../src/cli/socket.ts';
+import { listen, NoDaemonError, type Reply, send, socketPath } from '../../../src/cli/socket.ts';
 import { assertEquals, assertRejects, assertStringIncludes } from '@std/assert';
 import { join } from '@std/path';
 
@@ -55,13 +55,14 @@ Deno.test('a handler that throws answers with the failure rather than closing th
   );
 });
 
-Deno.test('talking to a config with no daemon behind it says so', async () => {
+Deno.test('talking to a config with no daemon behind it says so, in a way the CLI can act on', async () => {
   const dir = await Deno.makeTempDir();
 
   try {
+    // Its own type, so `self-update` can tell "nothing to ask" apart from "the daemon said no".
     await assertRejects(
       () => send(join(dir, 'config.yml'), 'self-update'),
-      Error,
+      NoDaemonError,
       'No checker is running',
     );
   } finally {

@@ -15,6 +15,25 @@ curl -fsSL -o ~/.local/bin/checker https://github.com/cameronmurphy/checker/rele
 chmod +x ~/.local/bin/checker
 ```
 
+## Updating
+
+```shell
+checker self-update
+```
+
+The newest release for this platform replaces the installed binary. The download is checked against the `SHA256SUMS`
+published with the release and discarded if it doesn't match, the previous binary is kept alongside as
+`checker.previous`, and nothing happens at all when the installed version is already the newest.
+
+Where a checker is [running as a service](#running-as-a-service-macos), it does the work itself rather than the CLI
+doing it behind its back: the CLI reaches it over a socket beside the config file, so the two can't disagree about which
+binary is installed, and it exits once the swap is done so `KeepAlive` restarts it on the new one. The swap is a rename,
+so the running process keeps the binary it started from until that moment.
+
+With nothing running there's nothing to co-ordinate with, so the CLI swaps the binary itself and says so — the new one
+is picked up whenever checker next starts. Running from a source checkout it refuses outright, since the binary it would
+replace is `deno` itself.
+
 ## Configuration
 
 Checker reads `~/.config/checker/config.yml`. Starting it without one writes the example config there and stops, so the
@@ -315,17 +334,4 @@ re-checked. A config that fails to parse is logged and ignored, leaving the runn
 Dropping a new plugin into the plugin directory also takes effect on the next config save. Editing an existing plugin
 needs the service restarted, as does installing a new binary.
 
-### Updating
-
-```shell
-checker self-update
-```
-
-This asks the running service to replace itself with the newest release for its platform, rather than doing the work in
-your shell — the CLI reaches it over a socket beside the config file, so the two can't disagree about which binary is
-installed. The download is checked against the `SHA256SUMS` published with the release and discarded if it doesn't
-match, and the previous binary is kept alongside as `checker.previous`.
-
-Nothing happens when the running version is already the newest. When it isn't, the binary is swapped and the service
-exits so `KeepAlive` restarts it on the new one — the swap is a rename, so the running process keeps the binary it
-started from until that moment.
+Updating the binary is [`checker self-update`](#updating), which the running service handles itself.

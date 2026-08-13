@@ -6,6 +6,9 @@ import { SOCKET_FILE_NAME } from '../constants.ts';
 /** What the daemon sends back for a command, one JSON line. */
 export type Reply = { ok: boolean; message: string; exit?: boolean };
 
+/** Nothing is listening, which a caller may be able to handle itself rather than give up on. */
+export class NoDaemonError extends Error {}
+
 // sockaddr_un caps the path at 104 bytes on macOS and 108 on Linux, and binding a longer one fails
 // with "path must be shorter than SUN_LEN". Well under both, since the cap counts bytes.
 const MAX_SOCKET_PATH = 90;
@@ -121,7 +124,7 @@ export async function send(configFile: string, command: string): Promise<Reply> 
   try {
     connection = await Deno.connect({ transport: 'unix', path });
   } catch {
-    throw new Error(`No checker is running on ${path}`);
+    throw new NoDaemonError(`No checker is running on ${path}`);
   }
 
   try {

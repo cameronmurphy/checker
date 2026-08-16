@@ -241,6 +241,7 @@ and everything resolves offline:
 | `checker/plugins/destination`         | `BaseDestinationPlugin` (default), `DestinationConfigSchema`                                  |
 | `checker/comparator`                  | `BaseComparator`, to write your own                                                           |
 | `checker/comparator/case-insensitive` | `CaseInsensitiveComparator` — any change in text, ignoring case                               |
+| `checker/comparator/debian`           | `DebianComparator` — a higher Debian package version, epochs, revisions and `~` included      |
 | `checker/comparator/int`              | `IntComparator` — a bigger number than last time                                              |
 | `checker/comparator/semver`           | `SemverComparator` — a higher version, falling back to inequality for tags that aren't semver |
 | `checker/comparator/strlen`           | `StrlenComparator` — the text got longer                                                      |

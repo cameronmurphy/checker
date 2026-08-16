@@ -83,6 +83,25 @@ config:
     #     # the value itself and a destination can act on it. Bodies longer than one short line are
     #     # refused, since storing a whole page is what 'page' is for.
     #     - 'https://dl.deno.land/release-lts-latest.txt'
+    # ubuntu:
+    #   # Optional, default 'ubuntu', which is the distribution's own archive. A PPA is written the
+    #   # way add-apt-repository takes it, and is where anything newer than Ubuntu ships comes from —
+    #   # PHP 8.5 on a 24.04 machine is ondrej's, since noble itself only ever carries 8.3.
+    #   archive: 'ppa:ondrej/php'
+    #   # The release the machine is on: noble, jammy, plucky. Versions differ per series, so there's
+    #   # no sensible default and an item with no series to check reports that rather than guessing.
+    #   series: 'noble'
+    #   items:
+    #     # Source package names rather than the binaries apt installs: 'php8.5' covers php8.5-cli,
+    #     # php8.5-fpm and the rest, which are built from it and versioned together. A name apt knows
+    #     # but the archive doesn't publish reads as nothing, and says so.
+    #     - 'php8.5'
+    #     # apt's own package/release syntax, for a second machine that hasn't been upgraded yet.
+    #     - 'php8.5/jammy'
+    #   # Full Debian versions are stored and compared the way dpkg orders them, so a security update
+    #   # that moves only the packaging revision (8.3.6-0ubuntu0.24.04.9 to .10) notifies like any
+    #   # other. What's watched is what the archive publishes, not what a machine has installed: the
+    #   # first check stores whatever is current and it stays quiet until the release after that.
     # # The same plugin twice, under names of your choosing, so the line you're on and the one you
     # # aren't can be treated differently: a 4.x release opens an upgrade PR, while the major you
     # # haven't budgeted for only ever reaches your phone.

@@ -5,6 +5,7 @@ import { NodejsSource } from './nodejs.ts';
 import { NpmSource } from './npm.ts';
 import { PageSource } from './page.ts';
 import { TextSource } from './text.ts';
+import { UbuntuSource } from './ubuntu.ts';
 
 export default [
   DockerSource,
@@ -14,4 +15,5 @@ export default [
   NpmSource,
   PageSource,
   TextSource,
+  UbuntuSource,
 ];

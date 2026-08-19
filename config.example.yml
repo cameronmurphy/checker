@@ -102,6 +102,23 @@ config:
     #   # that moves only the packaging revision (8.3.6-0ubuntu0.24.04.9 to .10) notifies like any
     #   # other. What's watched is what the archive publishes, not what a machine has installed: the
     #   # first check stores whatever is current and it stays quiet until the release after that.
+    # downloads:
+    #   interval: 30 # Optional, default 30 seconds — a download outlives the hourly default everything else uses
+    #   items:
+    #     # Folders a browser downloads into, scanned for the '.crdownload' files Chrome writes
+    #     # while a transfer is running and renames away when it finishes. Each folder is read as it
+    #     # stands and nothing below it is: a browser writes into the folder it was pointed at, and
+    #     # one of these can be the root of a volume.
+    #     - '~/Downloads'
+    #   # Optional, both default true. Per file, each download is named and sized as it lands, along
+    #   # with how many are still going; per queue, one 'All files have finished downloading' when
+    #   # the last one lands. With both on and one download left, they arrive as a single
+    #   # notification rather than two. Turning both off is refused, since nothing would ever be
+    #   # sent.
+    #   notify_per_file: true
+    #   notify_queue_empty: true
+    #   # Nothing is reported for a folder until a download finishes in it, so starting checker
+    #   # while a transfer is running adopts it quietly rather than announcing it.
     # # The same plugin twice, under names of your choosing, so the line you're on and the one you
     # # aren't can be treated differently: a 4.x release opens an upgrade PR, while the major you
     # # haven't budgeted for only ever reaches your phone.

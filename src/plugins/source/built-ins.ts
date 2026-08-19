@@ -1,4 +1,5 @@
 import { DockerSource } from './docker.ts';
+import { DownloadsSource } from './downloads.ts';
 import { GithubSource } from './github.ts';
 import { JsonSource } from './json.ts';
 import { NodejsSource } from './nodejs.ts';
@@ -9,6 +10,7 @@ import { UbuntuSource } from './ubuntu.ts';
 
 export default [
   DockerSource,
+  DownloadsSource,
   GithubSource,
   JsonSource,
   NodejsSource,

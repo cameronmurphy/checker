@@ -7,6 +7,7 @@ import { NpmSource } from './npm.ts';
 import { PageSource } from './page.ts';
 import { TextSource } from './text.ts';
 import { UbuntuSource } from './ubuntu.ts';
+import { VirtualboxSource } from './virtualbox.ts';
 
 export default [
   DockerSource,
@@ -18,4 +19,5 @@ export default [
   PageSource,
   TextSource,
   UbuntuSource,
+  VirtualboxSource,
 ];

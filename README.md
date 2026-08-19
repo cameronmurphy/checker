@@ -167,6 +167,40 @@ The default context's `errors` is the fallback: it covers every context that doe
 nothing can be attributed to. Above, `myapp`'s failures reach your phone and everything else lands in the log file. Each
 failure is reported once, so a source that's been down for a week doesn't notify on every check.
 
+### Running a script
+
+Most destinations announce an update. The `script` destination acts on one, by running a local command:
+
+```yaml
+config:
+  sources:
+    virtualbox:
+      items: ['latest']
+      destinations: [pushover, vbox_upgrade]
+  destinations:
+    pushover:
+      token: 'your-pushover-token'
+      user_key: 'your-user-key'
+    vbox_upgrade:
+      plugin: script
+      command: '~/.local/bin/vbox-upgrade.sh'
+      timeout: 2700
+```
+
+The message arrives on stdin and in `$CHECKER_MESSAGE`, the destination's own name is in `$CHECKER_DESTINATION`, and
+`{{message}}` in any argument is substituted with it. The script's output is inherited rather than captured, so a long
+upgrade reports progress into checker's log while it runs.
+
+A zero exit status counts as delivered. **Exit non-zero and the source keeps its old value**, so the next check hands
+the script the same update again rather than losing an upgrade to a download that happened to fail. That retry is per
+destination only in the sense that the value is kept — a source whose other destinations succeeded has already been
+delivered, so pair a script with `pushover` and a failed upgrade won't be retried. Give the script its own source entry
+if you want both the notification and the retry.
+
+Nothing about the script is run through a shell: `command` is executed directly, so there's no quoting to get wrong, and
+no interpolation of the message anywhere it could be treated as syntax. A script still outliving its `timeout` is sent
+`SIGTERM`, defaulting to 900 seconds.
+
 ## Writing a plugin
 
 ### Sources

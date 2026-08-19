@@ -102,6 +102,18 @@ config:
     #   # that moves only the packaging revision (8.3.6-0ubuntu0.24.04.9 to .10) notifies like any
     #   # other. What's watched is what the archive publishes, not what a machine has installed: the
     #   # first check stores whatever is current and it stays quiet until the release after that.
+    # virtualbox:
+    #   items:
+    #     # VirtualBox is closed source, so there are no release tags to watch — the changelog is
+    #     # the only place Oracle states what a version is and what changed in it. 'latest' follows
+    #     # whichever branch is current, so it carries across to the new one at a major release
+    #     # rather than going quiet on the old.
+    #     - 'latest'
+    #     # A branch instead, for a machine held back on one. Betas and release candidates are
+    #     # skipped either way: there is nothing to install yet, so nothing to hear about.
+    #     - '7.1'
+    #   # The message carries the release date and the changelog entries, trimmed to fit a
+    #   # destination that won't take a long one, with the rest counted.
     # downloads:
     #   interval: 30 # Optional, default 30 seconds — a download outlives the hourly default everything else uses
     #   items:
@@ -156,6 +168,17 @@ config:
     #     This package was just updated. Upgrade the project.
     #
     #     {{message}}
+    # # Runs a local command, which is how an update gets acted on rather than announced. The message
+    # # arrives on stdin and in $CHECKER_MESSAGE, and a zero exit status counts as delivered — exit
+    # # non-zero and the source keeps its old value, so the next check hands the script the same
+    # # update again instead of losing it.
+    # script:
+    #   command: '~/.local/bin/upgrade.sh'
+    #   args: ['--headless'] # Optional. {{message}} in an argument is substituted with the message
+    #   cwd: '~/Source/myapp' # Optional, defaults to the directory checker was started in
+    #   env: # Optional. $CHECKER_MESSAGE and $CHECKER_DESTINATION are always set
+    #     UPGRADE_MODE: 'headless'
+    #   timeout: 900 # Optional seconds before the script is killed, default 900
     # # A second log file, so failures don't get mixed in with the updates above.
     # failure_log:
     #   plugin: log_file

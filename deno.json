@@ -1,6 +1,6 @@
 {
   "name": "@camurphy/checker",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "license": "MIT",
   "exports": {
     "./plugins/source": "./src/plugins/source/base.ts",

@@ -100,6 +100,8 @@ jobs:
           printf '%s' "$P12" | base64 -d > "$RUNNER_TEMP/cert.p12"
           security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$P12_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S 'apple-tool:,apple:' -s -k "$password" "$keychain" > /dev/null
+          # codesign consults the keychain search list; a keychain not on it does not exist.
+          security list-keychains -d user -s "$keychain"
 
           identity=$(security find-identity -v -p codesigning "$keychain" |
             sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)

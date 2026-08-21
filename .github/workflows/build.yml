@@ -66,9 +66,63 @@ jobs:
           name: checker-${{ matrix.target }}
           path: dist/checker-${{ matrix.target }}
 
-  release:
+  # A signature from the repository's Developer ID, when the secrets hold one. macOS ties consent —
+  # volume access, launch approval — to the signing identity, and the ad-hoc signature the compile
+  # leaves is a new identity every build, so each release re-asked every machine for everything.
+  # Signing here gives every release the same identity for everyone who installs one.
+  sign:
     if: startsWith(github.event.workflow_run.head_branch, 'v')
     needs: build
+    runs-on: macos-latest
+
+    steps:
+      - name: Download compiled app
+        uses: actions/download-artifact@v8
+        with:
+          name: checker-aarch64-apple-darwin
+          path: dist
+
+      - name: Sign with the Developer ID
+        env:
+          P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          P12_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -z "$P12" ]; then
+            echo "::warning::No APPLE_CERTIFICATE_P12 secret, releasing with the ad-hoc signature"
+            exit 0
+          fi
+
+          keychain="$RUNNER_TEMP/sign.keychain-db"
+          password=$(uuidgen)
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 900 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          printf '%s' "$P12" | base64 -d > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S 'apple-tool:,apple:' -s -k "$password" "$keychain" > /dev/null
+
+          identity=$(security find-identity -v -p codesigning "$keychain" |
+            sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)
+
+          if [ -z "$identity" ]; then
+            echo "::error::The certificate imported but holds no Developer ID Application identity"
+            exit 1
+          fi
+
+          codesign --force --sign "$identity" dist/checker-aarch64-apple-darwin
+          codesign --verify --verbose=2 dist/checker-aarch64-apple-darwin
+
+      # Overwrites the unsigned artifact, so the release job checksums what people will run.
+      - name: Upload signed app
+        uses: actions/upload-artifact@v7
+        with:
+          name: checker-aarch64-apple-darwin
+          path: dist/checker-aarch64-apple-darwin
+          overwrite: true
+
+  release:
+    if: startsWith(github.event.workflow_run.head_branch, 'v')
+    needs: [build, sign]
     runs-on: ubuntu-latest
 
     permissions:

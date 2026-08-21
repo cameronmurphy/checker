@@ -56,6 +56,11 @@ export function identityFrom(listing: string): string | null {
   return listing.match(/"(Developer ID Application: [^"]+)"/)?.[1] ?? null;
 }
 
+/** Whether `codesign -dv` output shows a Developer ID signature rather than an ad-hoc one. */
+export function developerSigned(details: string): boolean {
+  return details.includes('Authority=Developer ID Application');
+}
+
 /**
  * Re-signs the new binary with the keychain's Developer ID, when there is one.
  *
@@ -68,6 +73,12 @@ export function identityFrom(listing: string): string | null {
  */
 async function sign(path: string): Promise<void> {
   if (Deno.build.os !== 'darwin') return;
+
+  // A release signed in CI already has the stable identity, for this machine and every other one.
+  const details = await new Deno.Command('/usr/bin/codesign', { args: ['-dv', '--verbose=2', path] })
+    .output().catch(() => null);
+
+  if (details && developerSigned(new TextDecoder().decode(details.stderr))) return;
 
   const listing = await new Deno.Command('/usr/bin/security', {
     args: ['find-identity', '-v', '-p', 'codesigning'],

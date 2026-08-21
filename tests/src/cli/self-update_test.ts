@@ -1,4 +1,4 @@
-import selfUpdate, { exercise, identityFrom } from '../../../src/cli/self-update.ts';
+import selfUpdate, { developerSigned, exercise, identityFrom } from '../../../src/cli/self-update.ts';
 import { assertEquals, assertRejects } from '@std/assert';
 
 Deno.test('self-update refuses to touch anything when checker is running from source', async () => {
@@ -35,4 +35,9 @@ Deno.test('self-update finds the Developer ID among the keychain identities', ()
 Deno.test('self-update leaves the ad-hoc signature when the keychain has no Developer ID', () => {
   assertEquals(identityFrom('     0 valid identities found'), null);
   assertEquals(identityFrom('  1) 0123ABCD "Apple Development: cam@example.com (ABCDE12345)"'), null);
+});
+
+Deno.test('self-update can tell a CI-signed release from an ad-hoc one', () => {
+  assertEquals(developerSigned('Authority=Developer ID Application: Cameron Murphy (ABCDE12345)'), true);
+  assertEquals(developerSigned('Signature=adhoc\nTeamIdentifier=not set'), false);
 });

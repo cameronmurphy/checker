@@ -51,6 +51,47 @@ export function scheduleRestart(): void {
   }
 }
 
+/** Picks the Developer ID out of `security find-identity` output, if the keychain holds one. */
+export function identityFrom(listing: string): string | null {
+  return listing.match(/"(Developer ID Application: [^"]+)"/)?.[1] ?? null;
+}
+
+/**
+ * Re-signs the new binary with the keychain's Developer ID, when there is one.
+ *
+ * macOS ties consent — access to removable volumes, most visibly — to the binary's code-signing
+ * identity, and the ad-hoc signature deno compile leaves is a new identity every build. Each
+ * release made the daemon a stranger again: reads of a watched volume sat blocked in the kernel
+ * until someone clicked Allow on a prompt. A Developer ID signature is the same identity every
+ * release, so consent given once holds. With no identity in the keychain nothing happens, and the
+ * ad-hoc signature stays — that is the prompt-per-release status quo, not a failure.
+ */
+async function sign(path: string): Promise<void> {
+  if (Deno.build.os !== 'darwin') return;
+
+  const listing = await new Deno.Command('/usr/bin/security', {
+    args: ['find-identity', '-v', '-p', 'codesigning'],
+  }).output().catch(() => null);
+
+  if (!listing?.success) return;
+
+  const identity = identityFrom(new TextDecoder().decode(listing.stdout));
+
+  if (!identity) return;
+
+  const signed = await new Deno.Command('/usr/bin/codesign', {
+    args: ['--force', '--sign', identity, path],
+  }).output();
+
+  if (signed.success) {
+    console.log(`Signed as ${identity}`);
+  } else {
+    console.error(
+      `Signing as ${identity} failed, keeping the ad-hoc signature: ${new TextDecoder().decode(signed.stderr).trim()}`,
+    );
+  }
+}
+
 /**
  * Runs the new binary once, which has to happen before the daemon exits for its restart.
  *
@@ -145,6 +186,8 @@ export default async function selfUpdate(): Promise<UpdateResult> {
     await Deno.remove(staged).catch(() => {});
     throw error;
   }
+
+  await sign(path);
 
   // A binary that will not start is worse than no update, since the daemon exits expecting one.
   // Putting the old one back leaves something that runs, and the next check tries the update again.

@@ -45,12 +45,34 @@ async function checkItem(
   await setItemState(context, sourceName, item, current);
 }
 
+// How long a check gets before the daemon stops waiting on it. A read stuck in the kernel — an
+// unmounted volume, a disk that stopped answering — cannot be cancelled, only left behind.
+const STUCK_AFTER = 5 * 60 * 1000;
+
+const running = new WeakMap<BaseSourcePlugin, { skipped: number }>();
+
 export default function checkSource(
   context: string,
   source: BaseSourcePlugin,
   destinations: BaseDestinationPlugin[],
-) {
-  return runWithErrorContext(context, async () => {
+): Promise<void> {
+  const label = `${contextLabel(context)}${source.getAlias()}`;
+  const active = running.get(source);
+
+  // A check that has not finished holds its slot: starting another would stack a second stuck read
+  // on whatever the first is stuck on, thirty seconds at a time, until the thread pool is gone.
+  if (active) {
+    if (active.skipped++ === 0) {
+      console.log(`${label} has not finished its previous check, skipping this one`);
+    }
+
+    return Promise.resolve();
+  }
+
+  const state = { skipped: 0 };
+  running.set(source, state);
+
+  const work = runWithErrorContext(context, async () => {
     const sourceName = source.getAlias();
     const items: string[] = source.getConfig().items ?? [''];
 
@@ -61,5 +83,24 @@ export default function checkSource(
         console.error(`Check failed for ${contextLabel(context)}${sourceName}/${item}: ${describeError(error)}`);
       }
     }
+  }).finally(() => {
+    running.delete(source);
+
+    if (state.skipped > 0) {
+      console.log(`${label} finished a check that ran long enough to skip ${state.skipped} after it`);
+    }
   });
+
+  // The caller stops waiting, but the check keeps its slot until it truly finishes, so a wedged
+  // filesystem costs one stuck read rather than the sweep, the reload queue, or the thread pool.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const deadline = new Promise<void>((resolve) => {
+    timer = setTimeout(() => {
+      console.error(`${label} has been checking for ${STUCK_AFTER / 60000} minutes, leaving it behind`);
+      resolve();
+    }, STUCK_AFTER);
+  });
+
+  return Promise.race([work, deadline]).finally(() => clearTimeout(timer));
 }

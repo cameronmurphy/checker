@@ -1,4 +1,5 @@
 import app from '../../../src/cli/app.ts';
+import { assertEquals } from '@std/assert';
 import * as mock from '@std/testing/mock';
 import { emitConfigEvent, setConfig, setup, tearDown } from '../../mocks.ts';
 
@@ -78,6 +79,48 @@ Deno.test({
     const loggedFailure = consoleErrorStub.calls.some((c) => String(c.args[0]).includes('simulated network failure'));
     if (!loggedFailure) {
       throw new Error('Expected the source failure to be logged');
+    }
+  },
+});
+
+Deno.test({
+  name: 'app serves commands while the first sweep is still going',
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    setup();
+
+    const consoleLogStub = mock.stub(console, 'log');
+    const consoleErrorStub = mock.stub(console, 'error');
+
+    // Reads that finish only when told to, standing in for a sweep stuck on a wedged filesystem.
+    const holds: ((response: Response) => void)[] = [];
+    const fetchStub = mock.stub(
+      globalThis,
+      'fetch',
+      (input: string | URL | Request) =>
+        new Promise<Response>((resolve) => {
+          holds.push(resolve);
+          releaseResponse(input);
+        }),
+    );
+
+    try {
+      const running = app({ configFile: '~/.config/checker/config.yml' });
+
+      // The socket attempt is the proof: gated behind the sweep, it cannot happen while a read
+      // holds. It fails under the mocked HOME, and that failure names the path it tried.
+      await waitFor(() => consoleErrorStub.calls.some((c) => String(c.args[0]).includes('Not serving commands')));
+      assertEquals(holds.length > 0, true);
+
+      const bodies = await Promise.all(holds.map((_, index) => releaseResponse(String(index))));
+      holds.forEach((release, index) => release(bodies[index]));
+      await running;
+    } finally {
+      fetchStub.restore();
+      consoleErrorStub.restore();
+      consoleLogStub.restore();
+      tearDown();
     }
   },
 });

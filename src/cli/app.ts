@@ -94,7 +94,9 @@ export default async function app({ configFile }: { configFile: string }) {
   // Reloads queue behind whatever check is already running, so saving the config mid-sweep can't have
   // two passes racing to report the same item for the first time.
   let queued = apply('Checker started');
-  await queued;
+
+  // The socket and the watcher come up before that first sweep finishes — gated behind it, one
+  // wedged filesystem left the daemon deaf to self-update and config saves for as long as it hung.
 
   // Only exits once the binary was actually replaced, so a no-op check doesn't cost a restart.
   const listener = await listen(configFile, async (command): Promise<Reply> => {
@@ -125,4 +127,6 @@ export default async function app({ configFile }: { configFile: string }) {
 
   Deno.addSignalListener('SIGINT', shutdown);
   Deno.addSignalListener('SIGTERM', shutdown);
+
+  await queued;
 }

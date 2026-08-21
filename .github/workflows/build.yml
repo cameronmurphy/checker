@@ -49,7 +49,7 @@ jobs:
       # included for the same reason: a first run writes it out.
       - name: Build
         run: |
-          deno compile --allow-env --allow-read --allow-net --allow-write --allow-ffi --include ./src \
+          deno compile --allow-env --allow-read --allow-net --allow-write --allow-ffi --allow-run --include ./src \
             --include ./config.example.yml \
             --target ${{ matrix.target }} --output dist/checker-${{ matrix.target }} main.ts
 

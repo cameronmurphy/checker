@@ -2,6 +2,7 @@ import { dirname, join } from '@std/path';
 import { expand } from '../utils/path.ts';
 import { describeError } from '../utils/format.ts';
 import { SOCKET_FILE_NAME } from '../constants.ts';
+import { scheduleRestart } from './self-update.ts';
 
 /** What the daemon sends back for a command, one JSON line. */
 export type Reply = { ok: boolean; message: string; exit?: boolean };
@@ -100,6 +101,7 @@ export async function listen(
         if (reply.exit) {
           listener.close();
           await Deno.remove(path).catch(() => {});
+          scheduleRestart();
           console.log('Restarting to finish the update');
           Deno.exit(0);
         }

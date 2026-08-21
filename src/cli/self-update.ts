@@ -1,6 +1,7 @@
 import SemverComparator from '../comparator/semver.ts';
 import { RELEASES_API, SHA256SUMS_ASSET } from '../constants.ts';
 import denoJson from '../../deno.json' with { type: 'json' };
+import { describeError } from '../utils/format.ts';
 
 /** What an update attempt did, so the socket can report it and the daemon can decide to restart. */
 export type UpdateResult = { updated: boolean; message: string };
@@ -20,6 +21,57 @@ function expectedDigest(sums: string, asset: string): string | null {
   }
 
   return null;
+}
+
+/**
+ * Asks launchd to start this service again once this process is gone.
+ *
+ * KeepAlive is supposed to cover the restart, and mostly does, but macOS kills launchd's first
+ * launch of a code signature it has not seen with OS_REASON_CODESIGNING and then drops the service
+ * rather than retrying it, leaving the machine with no checker running and nothing that will start
+ * one. A kickstart from outside the job brings it back whichever way the launch went, and does
+ * nothing when launchd managed the restart itself.
+ */
+export function scheduleRestart(): void {
+  // Set by launchd to the job's label, and only by launchd, so this is also what says the process
+  // is a service at all rather than someone running checker in a terminal.
+  const label = Deno.env.get('XPC_SERVICE_NAME');
+
+  if (Deno.build.os !== 'darwin' || !label || label === '0') return;
+
+  try {
+    new Deno.Command('/bin/sh', {
+      args: ['-c', `sleep 5; exec /bin/launchctl kickstart gui/$(/usr/bin/id -u)/${label}`],
+      stdin: 'null',
+      stdout: 'null',
+      stderr: 'null',
+    }).spawn().unref();
+  } catch (error) {
+    console.error(`Could not arrange a restart, so checker may need starting by hand: ${describeError(error)}`);
+  }
+}
+
+/**
+ * Runs the new binary once, which has to happen before the daemon exits for its restart.
+ *
+ * macOS kills launchd's first launch of a code signature it has not seen with OS_REASON_CODESIGNING
+ * and drops the service rather than retrying it, so a daemon that exits to be restarted never comes
+ * back. An ordinary run takes that first launch somewhere it costs nothing and leaves launchd the
+ * second one. It doubles as the only check that what was downloaded runs at all: the checksum says
+ * the bytes arrived intact, not that they are a binary this machine can execute.
+ */
+export async function exercise(path: string): Promise<void> {
+  let ran: Deno.CommandOutput;
+
+  try {
+    ran = await new Deno.Command(path, { args: ['--version'], stdout: 'null', stderr: 'piped' }).output();
+  } catch (error) {
+    throw new Error(`The downloaded binary would not run: ${error instanceof Error ? error.message : error}`);
+  }
+
+  if (!ran.success) {
+    throw new Error(`The downloaded binary would not run: ${new TextDecoder().decode(ran.stderr).trim()}`);
+  }
 }
 
 async function fetchAsset(release: Release, name: string): Promise<Uint8Array<ArrayBuffer>> {
@@ -91,6 +143,15 @@ export default async function selfUpdate(): Promise<UpdateResult> {
     await Deno.rename(staged, path);
   } catch (error) {
     await Deno.remove(staged).catch(() => {});
+    throw error;
+  }
+
+  // A binary that will not start is worse than no update, since the daemon exits expecting one.
+  // Putting the old one back leaves something that runs, and the next check tries the update again.
+  try {
+    await exercise(path);
+  } catch (error) {
+    await Deno.rename(`${path}.previous`, path).catch(() => {});
     throw error;
   }
 

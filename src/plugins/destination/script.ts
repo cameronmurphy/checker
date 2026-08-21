@@ -51,8 +51,11 @@ export default class ScriptDestination extends BaseDestinationPlugin<ScriptConfi
     }
 
     const writer = child.stdin.getWriter();
-    await writer.write(new TextEncoder().encode(`${message}\n`));
-    await writer.close();
+
+    // A script that never reads stdin has usually exited by now, and writing to the closed pipe
+    // raises BrokenPipe. Its exit status is what decides delivery, so neither call speaks for it.
+    await writer.write(new TextEncoder().encode(`${message}\n`)).catch(() => {});
+    await writer.close().catch(() => {});
 
     const { code, signal } = await child.status;
 

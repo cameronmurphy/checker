@@ -63,6 +63,23 @@ Deno.test('script destination substitutes {{message}} into the arguments', async
   }
 });
 
+Deno.test('script destination delivers when the script exits without draining stdin', async () => {
+  const { dir, path, output } = await recorder('printf "%s" "$CHECKER_DESTINATION" > {{output}}');
+
+  try {
+    // A script reading $CHECKER_MESSAGE never touches the pipe, so a message too big to sit in the
+    // buffer leaves the write unfinished when the script exits. That is BrokenPipe, not a failure.
+    // The size has a ceiling as well as a floor: over the 64KB pipe buffer, but under the 128KB
+    // Linux allows one environment string, since the message is handed over that way too.
+    const plugin = destination(path).setAlias('vbox_upgrade');
+
+    assertEquals(await plugin.notify('an update\n'.repeat(9_000)), true);
+    assertEquals(await Deno.readTextFile(output), 'vbox_upgrade');
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
 Deno.test('script destination passes configured environment variables through', async () => {
   const { dir, path, output } = await recorder('printf "%s" "$UPGRADE_MODE" > {{output}}');
 

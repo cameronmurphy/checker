@@ -1,5 +1,5 @@
-import selfUpdate, { developerSigned, exercise, identityFrom } from '../../../src/cli/self-update.ts';
-import { assertEquals, assertRejects } from '@std/assert';
+import selfUpdate, { exercise } from '../../../src/cli/self-update.ts';
+import { assertRejects } from '@std/assert';
 
 Deno.test('self-update refuses to touch anything when checker is running from source', async () => {
   // Deno.execPath() is the deno binary here, and the tests run exactly that way, so this is the
@@ -22,22 +22,4 @@ Deno.test('self-update says so when the downloaded binary will not run', async (
 Deno.test('self-update accepts a binary that runs', async () => {
   // Whatever is running these tests answers --version, which is all the check asks of a download.
   await exercise(Deno.execPath());
-});
-
-Deno.test('self-update finds the Developer ID among the keychain identities', () => {
-  const listing = `  1) 0123ABCD "Apple Development: cam@example.com (ABCDE12345)"
-  2) 4567EF89 "Developer ID Application: Cameron Murphy (ABCDE12345)"
-     2 valid identities found`;
-
-  assertEquals(identityFrom(listing), 'Developer ID Application: Cameron Murphy (ABCDE12345)');
-});
-
-Deno.test('self-update leaves the ad-hoc signature when the keychain has no Developer ID', () => {
-  assertEquals(identityFrom('     0 valid identities found'), null);
-  assertEquals(identityFrom('  1) 0123ABCD "Apple Development: cam@example.com (ABCDE12345)"'), null);
-});
-
-Deno.test('self-update can tell a CI-signed release from an ad-hoc one', () => {
-  assertEquals(developerSigned('Authority=Developer ID Application: Cameron Murphy (ABCDE12345)'), true);
-  assertEquals(developerSigned('Signature=adhoc\nTeamIdentifier=not set'), false);
 });

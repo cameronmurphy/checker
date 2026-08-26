@@ -3,10 +3,11 @@ import { assertEquals } from '@std/assert';
 import * as mock from '@std/testing/mock';
 import { emitConfigEvent, setConfig, setup, tearDown } from '../../mocks.ts';
 
-// The github source lists releases and the npm source reads a single package document, so the shape
-// depends on which endpoint is being called.
+// Only github's release list answers with an array. Its designated-latest endpoint reads one
+// release and npm reads one package document, and a single object serves both. Anything else here
+// is a destination being notified, which only cares that the request succeeded.
 function releaseResponse(input: string | URL | Request): Promise<Response> {
-  const body = String(input).includes('/releases')
+  const body = String(input).includes('/releases?')
     ? [{ tag_name: 'v1.0.0' }]
     : { tag_name: 'v1.0.0', version: '1.0.0' };
 
@@ -93,16 +94,15 @@ Deno.test({
     const consoleLogStub = mock.stub(console, 'log');
     const consoleErrorStub = mock.stub(console, 'error');
 
-    // Reads that finish only when told to, standing in for a sweep stuck on a wedged filesystem.
-    const holds: ((response: Response) => void)[] = [];
+    // The first read finishes only when told to, standing in for a sweep stuck on a wedged
+    // filesystem. Everything after it answers normally, so releasing the hold lets the sweep run to
+    // completion instead of wedging on whatever request the read goes on to make.
+    const holds: { input: string | URL | Request; resolve: (response: Response) => void }[] = [];
     const fetchStub = mock.stub(
       globalThis,
       'fetch',
       (input: string | URL | Request) =>
-        new Promise<Response>((resolve) => {
-          holds.push(resolve);
-          releaseResponse(input);
-        }),
+        holds.length > 0 ? releaseResponse(input) : new Promise<Response>((resolve) => holds.push({ input, resolve })),
     );
 
     try {
@@ -113,8 +113,7 @@ Deno.test({
       await waitFor(() => consoleErrorStub.calls.some((c) => String(c.args[0]).includes('Not serving commands')));
       assertEquals(holds.length > 0, true);
 
-      const bodies = await Promise.all(holds.map((_, index) => releaseResponse(String(index))));
-      holds.forEach((release, index) => release(bodies[index]));
+      for (const { input, resolve } of holds) resolve(await releaseResponse(input));
       await running;
     } finally {
       fetchStub.restore();

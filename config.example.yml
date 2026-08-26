@@ -29,9 +29,23 @@ config:
         - 'http://api.open-notify.org/iss-now.json#/iss_position'
     # github:
     #   interval: 1800 # Optional, default 60 minutes (3600 seconds)
+    #   # Optional, default 'latest'. The track followed by items that don't name their own.
+    #   # 'latest' is the release GitHub designates as latest, which is what a project means by
+    #   # released: pnpm shipped v12.0.0 as a full release while leaving 11.24.0 designated, and only
+    #   # the designation says the major is meant to be picked up yet. 'highest' takes the greatest
+    #   # version published instead, which suits a project that backports: a patch landing on an
+    #   # older branch takes the designation and hides every newer major behind it.
+    #   track: 'latest'
     #   items:
     #     - 'tus/tusd'
     #     - 'gotenberg/gotenberg'
+    #     # An item's suffix overrides the track for that repo alone. pest published v4.7.7 after
+    #     # v5.0.2, so following the designation there would have missed the whole 5.x line. Watching
+    #     # one repo both ways is two items, since each keeps its own state.
+    #     - 'pestphp/pest@highest'
+    #     # And the reverse, for a repo that holds a major back under a source whose track is
+    #     # 'highest':
+    #     - 'pnpm/pnpm@latest'
     #   destinations: [pushover] # Optional, by default notify every destination in this context
     # npm:
     #   tag: 'latest' # Optional, default 'latest'. The track followed by items that don't name their own.

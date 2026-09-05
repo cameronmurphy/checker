@@ -5,5 +5,5 @@ runs:
     - name: Setup Deno
       uses: denoland/setup-deno@v2
       with:
-        deno-version-file: .tool-versions
+        deno-version-file: .deno-version
         cache: true

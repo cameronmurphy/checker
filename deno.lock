@@ -2,7 +2,6 @@
   "version": "5",
   "specifiers": {
     "jsr:@b-fuze/deno-dom@~0.1.56": "0.1.56",
-    "jsr:@camurphy/checker@0.0.2": "0.0.2",
     "jsr:@cliffy/command@^1.2.1": "1.2.1",
     "jsr:@cliffy/flags@1.2.1": "1.2.1",
     "jsr:@cliffy/internal@1.2.1": "1.2.1",
@@ -37,19 +36,13 @@
     "jsr:@std/xml@~0.1.3": "0.1.3",
     "jsr:@std/yaml@^1.1.2": "1.2.0",
     "jsr:@std/yaml@^1.2.0": "1.2.0",
-    "jsr:@zod/zod@^4.4.3": "4.4.3"
+    "jsr:@zod/zod@^4.5.4": "4.5.4"
   },
   "jsr": {
     "@b-fuze/deno-dom@0.1.56": {
       "integrity": "8030e2dc1d8750f1682b53462ab893d9c3470f2287feecbe22f44a88c54ab148",
       "dependencies": [
         "jsr:@denosaurs/plug"
-      ]
-    },
-    "@camurphy/checker@0.0.2": {
-      "integrity": "6c4b5c1c62d6cd98445d9cfb70cb8ec6576f722bf9e9830a9e0827f014fad096",
-      "dependencies": [
-        "jsr:@zod/zod"
       ]
     },
     "@cliffy/command@1.2.1": {
@@ -187,8 +180,8 @@
     "@std/yaml@1.2.0": {
       "integrity": "20beb41e4983ba3437dbefac62b14061ab058e8a187596f19d28ff9035f6e6cf"
     },
-    "@zod/zod@4.4.3": {
-      "integrity": "4712ac0967efaa718b37c36eaffb4e1d4457e1a266aef6efb3ab36f54a6fefe4"
+    "@zod/zod@4.5.4": {
+      "integrity": "bf0da80e42232d5f9f485d37b5c980e0d88f07fe04b9b1f2bd9012c008404df4"
     }
   },
   "remote": {
@@ -481,7 +474,7 @@
       "jsr:@std/testing@^1.0.20",
       "jsr:@std/toml@^1.0.11",
       "jsr:@std/yaml@^1.2.0",
-      "jsr:@zod/zod@^4.4.3"
+      "jsr:@zod/zod@^4.5.4"
     ]
   }
 }

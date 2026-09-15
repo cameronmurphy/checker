@@ -16,13 +16,13 @@
   "unstable": ["kv"],
   "exclude": [".claude"],
   "publish": {
-    "exclude": ["tests", "contrib", ".github"]
+    "exclude": ["tests", "scripts", "contrib", ".github"]
   },
   "tasks": {
     "dev": "deno run --allow-env --allow-read --allow-net --allow-write --allow-ffi --allow-run --watch main.ts",
     "run": "deno run --allow-env --allow-read --allow-net --allow-write --allow-ffi --allow-run main.ts",
     "test": "deno test --allow-env --allow-read --allow-net --allow-write --allow-run",
-    "compile": "deno compile --allow-env --allow-read --allow-net --allow-write --allow-ffi --allow-run --include ./src --include ./config.example.yml --output dist/checker main.ts"
+    "compile": "deno compile --allow-env --allow-read --allow-net --allow-write --allow-ffi --allow-run --include ./src --include ./config.example.yml --output dist/checker main.ts && deno run --allow-read --allow-write scripts/stamp-uuid.ts dist/checker && codesign --force --sign - dist/checker"
   },
   "imports": {
     "checker/plugins/source": "./src/plugins/source/base.ts",

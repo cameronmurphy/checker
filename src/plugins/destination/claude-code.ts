@@ -1,7 +1,6 @@
 import BaseDestinationPlugin, { DestinationConfigSchema } from './base.ts';
 import { z } from 'zod';
 
-const FIRE_BETA = 'experimental-cc-routine-2026-04-01';
 const MAX_TEXT_LENGTH = 65_536;
 
 const ClaudeCodeConfigSchema = DestinationConfigSchema.extend({
@@ -27,7 +26,6 @@ export default class ClaudeCodeDestination extends BaseDestinationPlugin<ClaudeC
       headers: {
         Authorization: `Bearer ${token}`,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': FIRE_BETA,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ text }),

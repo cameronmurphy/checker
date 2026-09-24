@@ -5,6 +5,7 @@ const PushoverConfigSchema = DestinationConfigSchema.extend({
   token: z.string(),
   user_key: z.string(),
   device: z.string().optional(),
+  priority: z.number().int().min(-2).max(1, 'Pushover priority 2 (emergency) is not supported').optional(),
 });
 
 type PushoverConfig = z.infer<typeof PushoverConfigSchema>;
@@ -25,6 +26,7 @@ export default class PushoverDestination extends BaseDestinationPlugin<PushoverC
         user: config.user_key,
         message,
         ...(config.device ? { device: config.device } : {}),
+        ...(config.priority !== undefined ? { priority: config.priority } : {}),
       }),
     });
 

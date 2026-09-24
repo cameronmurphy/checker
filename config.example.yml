@@ -170,6 +170,7 @@ config:
     #   token: 'your-pushover-token'
     #   user_key: 'your-user-key'
     #   device: 'iphone' # Optional
+    #   priority: 1 # Optional, -2 (silent) to 1 (high, bypasses quiet hours)
     # # Fires a Claude Code cloud routine, which runs unattended against the repositories configured
     # # on the routine itself. Create the routine at https://claude.ai/code/routines, add an API
     # # trigger, and copy the id and token from the modal it shows.

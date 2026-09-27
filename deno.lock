@@ -2,7 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@b-fuze/deno-dom@~0.1.56": "0.1.56",
-    "jsr:@cliffy/command@^1.2.1": "1.3.1",
+    "jsr:@cliffy/command@^1.3.1": "1.3.1",
     "jsr:@cliffy/flags@^1.3.1": "1.3.1",
     "jsr:@cliffy/internal@^1.3.1": "1.3.1",
     "jsr:@cliffy/table@^1.3.1": "1.3.1",
@@ -29,8 +29,8 @@
     "jsr:@std/path@^1.1.5": "1.1.6",
     "jsr:@std/path@^1.1.6": "1.1.6",
     "jsr:@std/semver@^1.0.8": "1.0.8",
-    "jsr:@std/streams@^1.0.17": "1.1.1",
-    "jsr:@std/streams@^1.0.9": "1.1.1",
+    "jsr:@std/streams@^1.0.17": "1.2.0",
+    "jsr:@std/streams@^1.0.9": "1.2.0",
     "jsr:@std/tar@~0.1.10": "0.1.10",
     "jsr:@std/testing@^1.0.21": "1.0.21",
     "jsr:@std/text@^1.0.19": "1.1.0",
@@ -160,8 +160,8 @@
     "@std/semver@1.0.8": {
       "integrity": "dc830e8b8b6a380c895d53fbfd1258dc253704ca57bbe1629ac65fd7830179b7"
     },
-    "@std/streams@1.1.1": {
-      "integrity": "92556d350e537e9dce527a6d08f6f15be3ff65e656079dea69d15252187c7613",
+    "@std/streams@1.2.0": {
+      "integrity": "256b934254778f2bf45f5713b934209ff29e9b4b7fd4ec095219966813758c5f",
       "dependencies": [
         "jsr:@std/bytes"
       ]
@@ -480,7 +480,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@b-fuze/deno-dom@~0.1.56",
-      "jsr:@cliffy/command@^1.2.1",
+      "jsr:@cliffy/command@^1.3.1",
       "jsr:@libs/xml@^8.0.1",
       "jsr:@std/assert@^1.0.19",
       "jsr:@std/csv@^1.0.6",

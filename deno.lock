@@ -24,8 +24,8 @@
     "jsr:@std/html@^1.0.7": "1.0.7",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "jsr:@std/internal@^1.0.14": "1.0.14",
-    "jsr:@std/json@^1.0.2": "1.1.0",
-    "jsr:@std/jsonc@^1.0.2": "1.0.2",
+    "jsr:@std/json@^1.1.0": "1.1.0",
+    "jsr:@std/jsonc@^1.0.3": "1.0.3",
     "jsr:@std/path@1": "1.1.6",
     "jsr:@std/path@^1.1.5": "1.1.6",
     "jsr:@std/path@^1.1.6": "1.1.6",
@@ -146,8 +146,8 @@
     "@std/json@1.1.0": {
       "integrity": "93330d3ed4054d6b1ffe54b075432c80a5f671be77277b978931e018014cb1cc"
     },
-    "@std/jsonc@1.0.2": {
-      "integrity": "909605dae3af22bd75b1cbda8d64a32cf1fd2cf6efa3f9e224aba6d22c0f44c7",
+    "@std/jsonc@1.0.3": {
+      "integrity": "9a4bb168c6b64e8e89944e45f96390a6e6e6865f59f02f0a70b24653911f2d64",
       "dependencies": [
         "jsr:@std/json"
       ]
@@ -487,7 +487,7 @@
       "jsr:@std/csv@^1.0.6",
       "jsr:@std/fs@^1.0.24",
       "jsr:@std/html@^1.0.7",
-      "jsr:@std/jsonc@^1.0.2",
+      "jsr:@std/jsonc@^1.0.3",
       "jsr:@std/path@^1.1.6",
       "jsr:@std/semver@^1.0.8",
       "jsr:@std/testing@^1.0.21",

@@ -38,7 +38,7 @@
     "@libs/xml": "jsr:@libs/xml@^8.0.0",
     "@std/csv": "jsr:@std/csv@^1.0.6",
     "@std/html": "jsr:@std/html@^1.0.7",
-    "@std/jsonc": "jsr:@std/jsonc@^1.0.2",
+    "@std/jsonc": "jsr:@std/jsonc@^1.0.3",
     "@std/path": "jsr:@std/path@^1.1.6",
     "@std/semver": "jsr:@std/semver@^1.0.8",
     "@std/toml": "jsr:@std/toml@^1.0.11",

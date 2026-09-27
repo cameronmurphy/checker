@@ -35,7 +35,7 @@
     "checker/comparator/strlen": "./src/comparator/strlen.ts",
     "checker/parse": "./src/parse.ts",
     "@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom@^0.1.56",
-    "@libs/xml": "jsr:@libs/xml@^8.0.0",
+    "@libs/xml": "jsr:@libs/xml@^8.0.1",
     "@std/csv": "jsr:@std/csv@^1.0.6",
     "@std/html": "jsr:@std/html@^1.0.7",
     "@std/jsonc": "jsr:@std/jsonc@^1.0.3",

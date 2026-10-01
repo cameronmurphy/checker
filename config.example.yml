@@ -59,6 +59,18 @@ config:
     #     # understands works: '^5', '~5.2', '5.x', '>=5 <6'. Ranges exclude prereleases unless they
     #     # ask for them, so '^5' waits for 5.0.0 while '^5.0.0-0' follows the betas leading up to it.
     #     - 'vite@^5'
+    # packagist:
+    #   constraint: '*' # Optional, default '*'. The range followed by items that don't name their own.
+    #   items:
+    #     # Composer packages, read from the p2 metadata file Composer itself installs from. Branch
+    #     # versions ('dev-main') live in a separate file that isn't fetched, so what gets selected is
+    #     # always a release.
+    #     - 'craftcms/cms'
+    #     # Suffixes are the same ranges the npm source takes, prerelease floor included: '^6.0.0-0'
+    #     # follows the 6.0.0 alphas and then 6.0.0 itself, while a plain '*' on the item above stays
+    #     # on the 5.x line throughout. Watching both is how a major you have to plan for gets its own
+    #     # destination.
+    #     - 'craftcms/cms@^6.0.0-0'
     # docker:
     #   prereleases: false # Optional, default false. Whether tags like '1.2.3-rc1' or '1.2.3-alpine' count as releases.
     #   # username: 'user' # Optional, for private repositories

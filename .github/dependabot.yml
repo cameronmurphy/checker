@@ -7,6 +7,8 @@ updates:
       - '/.github/actions/install'
     schedule:
       interval: 'weekly'
+      time: '06:00'
+      timezone: 'Australia/Melbourne'
     open-pull-requests-limit: 20
 
   # deno.json / deno.lock — the JSR and npm imports. Ungrouped, so a major arrives on its own.
@@ -14,4 +16,6 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+      time: '06:00'
+      timezone: 'Australia/Melbourne'
     open-pull-requests-limit: 20

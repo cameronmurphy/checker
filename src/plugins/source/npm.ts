@@ -1,5 +1,6 @@
 import BaseSourcePlugin, { SourceConfigSchema } from './base.ts';
 import SemverComparator from '../../comparator/semver.ts';
+import SemverMajorComparator from '../../comparator/semver-major.ts';
 import { format, maxSatisfying, type Range, tryParse, tryParseRange } from '@std/semver';
 import { z } from 'zod';
 
@@ -12,12 +13,14 @@ const PACKUMENT_ACCEPT = 'application/vnd.npm.install-v1+json';
 const NpmConfigSchema = SourceConfigSchema.extend({
   items: z.array(z.string()).min(1, 'Npm plugin requires at least one package name'),
   tag: z.string().default('latest'),
+  majors_only: z.boolean().default(false),
 });
 
 type NpmConfig = z.infer<typeof NpmConfigSchema>;
 
 export class NpmSource extends BaseSourcePlugin<NpmConfig> {
-  private readonly comparator = new SemverComparator();
+  private readonly semver = new SemverComparator();
+  private readonly majors = new SemverMajorComparator();
 
   public override getSchema() {
     return NpmConfigSchema;
@@ -31,7 +34,9 @@ export class NpmSource extends BaseSourcePlugin<NpmConfig> {
   }
 
   public override updated(before: string, after: string): boolean {
-    return this.comparator.updated(before, after);
+    const comparator = this.getConfig().majors_only ? this.majors : this.semver;
+
+    return comparator.updated(before, after);
   }
 
   public override message(before: string, after: string, item: string): string {

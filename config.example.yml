@@ -49,6 +49,11 @@ config:
     #   destinations: [pushover] # Optional, by default notify every destination in this context
     # npm:
     #   tag: 'latest' # Optional, default 'latest'. The track followed by items that don't name their own.
+    #   # Optional, default false. Notify only when the version crosses into a new major, so a tag
+    #   # that moves on every patch stays quiet until the major you're waiting for lands on it. The
+    #   # version last notified about is what the next check compares against, so the minors and
+    #   # patches skipped in between never become the baseline.
+    #   majors_only: false
     #   items:
     #     - 'vite'
     #     - '@types/node' # Scoped packages work as-is

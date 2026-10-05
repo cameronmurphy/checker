@@ -10,6 +10,7 @@
     "./comparator/debian": "./src/comparator/debian.ts",
     "./comparator/int": "./src/comparator/int.ts",
     "./comparator/semver": "./src/comparator/semver.ts",
+    "./comparator/semver-major": "./src/comparator/semver-major.ts",
     "./comparator/strlen": "./src/comparator/strlen.ts",
     "./parse": "./src/parse.ts"
   },
@@ -32,6 +33,7 @@
     "checker/comparator/debian": "./src/comparator/debian.ts",
     "checker/comparator/int": "./src/comparator/int.ts",
     "checker/comparator/semver": "./src/comparator/semver.ts",
+    "checker/comparator/semver-major": "./src/comparator/semver-major.ts",
     "checker/comparator/strlen": "./src/comparator/strlen.ts",
     "checker/parse": "./src/parse.ts",
     "@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom@^0.1.56",

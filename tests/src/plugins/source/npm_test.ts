@@ -5,9 +5,9 @@ import { assertEquals } from '@std/assert';
 // Deliberately out of order, so selection can't be passing by taking the first or last entry.
 const VERSIONS = ['4.30.4', '5.0.1', '3.9.9', '4.31.0-beta.1', '4.30.6', '5.0.0', '4.9.0'];
 
-function source(items: string[], tag = 'latest'): NpmSource {
+function source(items: string[], tag = 'latest', majorsOnly = false): NpmSource {
   const plugin = new NpmSource();
-  plugin.setConfig({ interval: 3600, items, tag });
+  plugin.setConfig({ interval: 3600, items, tag, majors_only: majorsOnly });
   return plugin;
 }
 
@@ -127,4 +127,22 @@ Deno.test('npm source names the tracked range in its messages', () => {
     plugin.message('', '4.30.6', 'filepond@^4'),
     'filepond (^4): first seen version is 4.30.6',
   );
+});
+
+Deno.test('npm source notifies on every release by default', () => {
+  const plugin = source(['expo']);
+
+  assertEquals(plugin.updated('57.0.26', '57.0.27'), true);
+  assertEquals(plugin.updated('57.0.26', '58.0.0'), true);
+});
+
+Deno.test('npm source holds out for a new major when asked to', () => {
+  // Expo publishes 58.x under 'next' long before promoting it, so a range watch would fire on a
+  // version 'latest' hasn't reached. Following the tag and skipping its patches is the watch that
+  // waits for the promotion itself.
+  const plugin = source(['expo'], 'latest', true);
+
+  assertEquals(plugin.updated('57.0.26', '57.0.27'), false);
+  assertEquals(plugin.updated('57.0.26', '57.1.0'), false);
+  assertEquals(plugin.updated('57.0.26', '58.0.0'), true);
 });

@@ -278,6 +278,7 @@ and everything resolves offline:
 | `checker/comparator/debian`           | `DebianComparator` — a higher Debian package version, epochs, revisions and `~` included      |
 | `checker/comparator/int`              | `IntComparator` — a bigger number than last time                                              |
 | `checker/comparator/semver`           | `SemverComparator` — a higher version, falling back to inequality for tags that aren't semver |
+| `checker/comparator/semver-major`     | `SemverMajorComparator` — a higher major only, ignoring minors and patches                    |
 | `checker/comparator/strlen`           | `StrlenComparator` — the text got longer                                                      |
 | `checker/parse`                       | `DOMParser`, `parseXml`, `parseYaml`, `parseToml`, `parseCsv`, `parseJsonc`, `unescapeHtml`   |
 | `zod`                                 | `z`, for the config schema                                                                    |

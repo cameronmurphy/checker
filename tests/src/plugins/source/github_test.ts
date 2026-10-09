@@ -12,7 +12,7 @@ function stubReleases(releases: Release[] | null, status = 200) {
   );
 }
 
-function source(items: string[], track: 'highest' | 'latest' = 'latest'): GithubSource {
+function source(items: string[], track: 'highest' | 'latest' | 'tags' = 'latest'): GithubSource {
   const plugin = new GithubSource();
   plugin.setConfig({ interval: 3600, items, track });
   return plugin;
@@ -153,10 +153,87 @@ Deno.test('github source lets an item opt out of the source-level track', async 
   }
 });
 
+function stubTags(names: string[], status = 200) {
+  return mock.stub(
+    globalThis,
+    'fetch',
+    (input: string | URL | Request) => {
+      assertEquals(String(input), 'https://api.github.com/repos/ghostty-org/ghostty/tags?per_page=100');
+      return Promise.resolve(new Response(JSON.stringify(names.map((name) => ({ name }))), { status }));
+    },
+  );
+}
+
+async function readTags(names: string[], status = 200): Promise<string> {
+  const plugin = source(['ghostty-org/ghostty@tags']);
+  const fetchStub = stubTags(names, status);
+
+  try {
+    return await plugin.read('ghostty-org/ghostty@tags');
+  } finally {
+    fetchStub.restore();
+  }
+}
+
+Deno.test("github source reads git tags under the '@tags' suffix", async () => {
+  // ghostty publishes one rolling 'tip' prerelease and no designated release at all, so both
+  // release tracks report nothing while the tags carry every version it has shipped.
+  assertEquals(await readTags(['v1.3.1', 'v1.3.0', 'v1.2.3', 'tip']), 'v1.3.1');
+});
+
+Deno.test('github source takes the highest tag, not the first one listed', async () => {
+  assertEquals(await readTags(['v1.10.0', 'v1.9.0', 'v1.2.0']), 'v1.10.0');
+  assertEquals(await readTags(['v1.2.0', 'v1.10.0']), 'v1.10.0');
+});
+
+Deno.test('github source skips prerelease tags', async () => {
+  // A tag carries no prerelease flag, so the version itself has to say so.
+  assertEquals(await readTags(['v1.4.0-rc1', 'v1.3.1']), 'v1.3.1');
+});
+
+Deno.test('github source falls back to the newest tag when nothing parses', async () => {
+  assertEquals(await readTags(['tip', 'nightly']), 'tip');
+});
+
+Deno.test('github source handles a repository with no tags', async () => {
+  assertEquals(await readTags([]), '');
+});
+
+Deno.test('github source returns nothing when the tags request fails', async () => {
+  assertEquals(await readTags(['v1.3.1'], 404), '');
+});
+
+Deno.test('github source words a tag update as a tag, not a release', () => {
+  const plugin = source(['ghostty-org/ghostty@tags']);
+
+  assertEquals(
+    plugin.message('v1.3.0', 'v1.3.1', 'ghostty-org/ghostty@tags'),
+    'ghostty-org/ghostty (tags): new tag v1.3.1 (was v1.3.0)',
+  );
+  assertEquals(
+    plugin.message('', 'v1.3.1', 'ghostty-org/ghostty@tags'),
+    'ghostty-org/ghostty (tags): first seen tag is v1.3.1',
+  );
+});
+
+Deno.test("github source reads tags for every item under a source whose track is 'tags'", async () => {
+  const plugin = source(['ghostty-org/ghostty'], 'tags');
+  const fetchStub = stubTags(['v1.3.1']);
+
+  try {
+    assertEquals(await plugin.read('ghostty-org/ghostty'), 'v1.3.1');
+  } finally {
+    fetchStub.restore();
+  }
+});
+
 Deno.test('github source rejects an item that is not owner/repo', () => {
   const schema = new GithubSource().getSchema();
 
-  assertEquals(schema.safeParse({ items: ['owner/repo', 'owner/repo@latest', 'a/b@highest'] }).success, true);
+  assertEquals(
+    schema.safeParse({ items: ['owner/repo', 'owner/repo@latest', 'a/b@highest', 'a/b@tags'] }).success,
+    true,
+  );
   assertEquals(schema.safeParse({ items: ['owner/repo@next'] }).success, false);
   assertEquals(schema.safeParse({ items: ['not-a-repo'] }).success, false);
 });

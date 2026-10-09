@@ -34,7 +34,8 @@ config:
     #   # released: pnpm shipped v12.0.0 as a full release while leaving 11.24.0 designated, and only
     #   # the designation says the major is meant to be picked up yet. 'highest' takes the greatest
     #   # version published instead, which suits a project that backports: a patch landing on an
-    #   # older branch takes the designation and hides every newer major behind it.
+    #   # older branch takes the designation and hides every newer major behind it. 'tags' ignores
+    #   # releases altogether and takes the highest semver git tag, for a project that only tags.
     #   track: 'latest'
     #   items:
     #     - 'tus/tusd'
@@ -46,6 +47,10 @@ config:
     #     # And the reverse, for a repo that holds a major back under a source whose track is
     #     # 'highest':
     #     - 'pnpm/pnpm@latest'
+    #     # ghostty cuts no releases — it keeps one rolling 'tip' prerelease and tags versions — so
+    #     # both release tracks report nothing there and only the tags say what shipped. Prerelease
+    #     # tags are skipped, since a tag carries no flag saying it's one.
+    #     - 'ghostty-org/ghostty@tags'
     #   destinations: [pushover] # Optional, by default notify every destination in this context
     # npm:
     #   tag: 'latest' # Optional, default 'latest'. The track followed by items that don't name their own.

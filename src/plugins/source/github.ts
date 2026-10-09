@@ -3,14 +3,14 @@ import SemverComparator from '../../comparator/semver.ts';
 import { greaterThan, type SemVer, tryParse } from '@std/semver';
 import { z } from 'zod';
 
-const TRACKS = ['highest', 'latest'] as const;
-const ITEM = /^[^\s/@]+\/[^\s/@]+(@(highest|latest))?$/;
+const TRACKS = ['highest', 'latest', 'tags'] as const;
+const ITEM = /^[^\s/@]+\/[^\s/@]+(@(highest|latest|tags))?$/;
 
 const GithubConfigSchema = SourceConfigSchema.extend({
   items: z.array(
     z.string().refine(
       (item) => ITEM.test(item),
-      "Github plugin items are written 'owner/repo', optionally suffixed '@highest' or '@latest'",
+      "Github plugin items are written 'owner/repo', optionally suffixed '@highest', '@latest' or '@tags'",
     ),
   ).min(1, 'Github plugin requires at least one item'),
   track: z.enum(TRACKS).default('latest'),
@@ -22,6 +22,8 @@ type GithubConfig = z.infer<typeof GithubConfigSchema>;
 
 type Release = { tag_name?: string; draft?: boolean; prerelease?: boolean };
 
+type Tag = { name?: string };
+
 export class GithubSource extends BaseSourcePlugin<GithubConfig> {
   private readonly comparator = new SemverComparator();
 
@@ -31,6 +33,8 @@ export class GithubSource extends BaseSourcePlugin<GithubConfig> {
 
   public override async read(item: string): Promise<string> {
     const { repo, track } = this.parseItem(item);
+
+    if (track === 'tags') return await this.readTags(repo);
 
     return track === 'latest' ? await this.readDesignated(repo) : await this.readHighest(repo);
   }
@@ -42,11 +46,12 @@ export class GithubSource extends BaseSourcePlugin<GithubConfig> {
   public override message(before: string, after: string, item: string): string {
     const { repo, track } = this.parseItem(item);
     const label = track === 'latest' ? '' : ` (${track})`;
+    const noun = track === 'tags' ? 'tag' : 'release';
 
     if (!before) {
-      return `${repo}${label}: first seen release is ${after}`;
+      return `${repo}${label}: first seen ${noun} is ${after}`;
     }
-    return `${repo}${label}: new release ${after} (was ${before})`;
+    return `${repo}${label}: new ${noun} ${after} (was ${before})`;
   }
 
   private async readHighest(repo: string): Promise<string> {
@@ -61,8 +66,27 @@ export class GithubSource extends BaseSourcePlugin<GithubConfig> {
       .map((release) => release.tag_name)
       .filter((tag): tag is string => Boolean(tag));
 
-    let latest = '';
-    let latestVersion: SemVer | null = null;
+    // Nothing parseable — fall back to the most recently published release so a repo that doesn't
+    // tag semver degrades to the old behaviour instead of going silent.
+    return this.highest(tags) || tags[0] || '';
+  }
+
+  private async readTags(repo: string): Promise<string> {
+    const response = await this.get(repo, `https://api.github.com/repos/${repo}/tags?per_page=100`);
+
+    if (!response) return '';
+
+    const tags: Tag[] = await response.json();
+    const names = tags.map((tag) => tag.name).filter((name): name is string => Boolean(name));
+
+    const stable = names.filter((name) => !tryParse(name)?.prerelease?.length);
+
+    return this.highest(stable) || names[0] || '';
+  }
+
+  private highest(tags: string[]): string {
+    let highest = '';
+    let highestVersion: SemVer | null = null;
 
     for (const tag of tags) {
       const version = tryParse(tag);
@@ -70,17 +94,15 @@ export class GithubSource extends BaseSourcePlugin<GithubConfig> {
       // Not every tag is semver ('nightly', 'release-1.2.3'). Those can't be ranked, so they're
       // skipped rather than throwing.
       if (!version) continue;
-      if (latestVersion && !greaterThan(version, latestVersion)) continue;
+      if (highestVersion && !greaterThan(version, highestVersion)) continue;
 
       // The raw tag, never a normalised one: stored state holds tags as GitHub writes them, and the
       // comparator has to keep seeing the same shape.
-      latest = tag;
-      latestVersion = version;
+      highest = tag;
+      highestVersion = version;
     }
 
-    // Nothing parseable — fall back to the most recently published release so a repo that doesn't
-    // tag semver degrades to the old behaviour instead of going silent.
-    return latest || tags[0] || '';
+    return highest;
   }
 
   private async readDesignated(repo: string): Promise<string> {

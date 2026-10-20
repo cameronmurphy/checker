@@ -5,7 +5,7 @@ const MAX_TEXT_LENGTH = 65_536;
 
 const ClaudeCodeConfigSchema = DestinationConfigSchema.extend({
   routine_id: z.string().startsWith('trig_', "Routine IDs are prefixed 'trig_', not 'routine_'"),
-  token: z.string(),
+  token: z.string().startsWith('sk-ant-oat01-', "Routine tokens are prefixed 'sk-ant-oat01-', not an API key"),
   prompt: z.string().default('{{message}}'),
 });
 
